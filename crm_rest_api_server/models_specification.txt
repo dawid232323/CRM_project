@@ -1,0 +1,45 @@
+users - Użytkownik
+id
+name - imię
+surname - nazwisko
+dateOfBirth data urodzenia
+login
+password hasło (na ocenę 4 jeśli robimy autoryzację - hasło trzymamy w formie niejawnej)
+id roli (na ocenę 4 jeśli robimy role)
+isDeleted - znacznik czy usunięty
+
+companies - Klient/firma (na ocenę 5)
+id
+name - nazwa firmy
+nip - nip
+id branży
+adres
+miasto
+id użytkownika który dodał firmę
+isDeleted znacznik czy usunięty
+
+Notatka handlowa (na ocenę 5)
+id
+treść notatki
+znacznik czy usunięta
+id firmy powiązanej
+id użytkownika który dodał notatkę
+
+Osoba kontaktowa (na ocenę 5)
+id
+imię
+nazwisko
+telefon
+mail
+stanowisko
+id firmy powiązanej
+id użytkownika który dodał osobę
+isDeleted znacznik czy usunięty
+
+Role
+id
+nazwa roli
+
+Branże
+id
+nazwa branży
