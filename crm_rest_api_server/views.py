@@ -1,23 +1,33 @@
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import APIView
 from rest_framework import generics, mixins, viewsets
 from rest_framework.authentication import TokenAuthentication
 
-from crm_rest_api_server.models import Roles
-from crm_rest_api_server.serializers import RoleSerializer
+from crm_rest_api_server.decorators import role_auth
+from crm_rest_api_server.models import Roles, CmrUser
+from crm_rest_api_server.serializers import RoleSerializer, UserSerializer
 
 
 def index(request):
     return HttpResponse('Hello world')
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = CmrUser.objects.all()
+
+
 class RoleViewSet(viewsets.ModelViewSet):
     serializer_class = RoleSerializer
     queryset = Roles.objects.all()
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (TokenAuthentication,)
 
+    @role_auth
     def list(self, request, *args, **kwargs):
         roles = Roles.objects.all()
         serializer = RoleSerializer(roles, many=True)
