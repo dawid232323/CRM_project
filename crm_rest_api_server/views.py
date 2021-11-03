@@ -7,7 +7,7 @@ from rest_framework.decorators import APIView
 from rest_framework import generics, mixins, viewsets
 from rest_framework.authentication import TokenAuthentication
 
-from crm_rest_api_server.decorators import role_auth
+from crm_rest_api_server.decorators import role_auth_maker
 from crm_rest_api_server.models import Roles, CmrUser
 from crm_rest_api_server.serializers import RoleSerializer, UserSerializer
 
@@ -16,18 +16,13 @@ def index(request):
     return HttpResponse('Hello world')
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
-    queryset = CmrUser.objects.all()
-
-
 class RoleViewSet(viewsets.ModelViewSet):
     serializer_class = RoleSerializer
     queryset = Roles.objects.all()
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication,)
 
-    @role_auth
+    @role_auth_maker(2)
     def list(self, request, *args, **kwargs):
         roles = Roles.objects.all()
         serializer = RoleSerializer(roles, many=True)
@@ -60,3 +55,33 @@ class RoleViewSet(viewsets.ModelViewSet):
         to_delete.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = CmrUser.objects.all()
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (TokenAuthentication,)
+
+    @role_auth_maker(1)
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @role_auth_maker({1, 2, 3})
+    def list(self, request, *args, **kwargs):
+        users = CmrUser.objects.all()
+        serialized_data = self.serializer_class(users, many=True)
+        return Response(serialized_data.data)
+
+    def destroy(self, request, *args, **kwargs):
+        pass
+
+    def update(self, request, *args, **kwargs):
+        pass
+
+    def retrieve(self, request, *args, **kwargs):
+        pass
