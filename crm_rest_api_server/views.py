@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,12 +22,13 @@ class RoleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication,)
 
-    @role_auth_maker(2)
+    @role_auth_maker({1, 2})
     def list(self, request, *args, **kwargs):
         roles = Roles.objects.all()
         serializer = RoleSerializer(roles, many=True)
         return Response(serializer.data)
 
+    @role_auth_maker({1})
     def create(self, request, *args, **kwargs):
         serialized_data = RoleSerializer(data=request.data)
         if serialized_data.is_valid():
@@ -36,11 +37,13 @@ class RoleViewSet(viewsets.ModelViewSet):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    @role_auth_maker({1})
     def retrieve(self, request, pk=None, *args, **kwargs):
         retrieved_object = self.queryset.get(pk=pk)
         serializer = RoleSerializer(retrieved_object)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @role_auth_maker({1})
     def update(self, request, pk=None, *args, **kwargs):
         wanted_role = self.queryset.get(pk=pk)
         serializer = RoleSerializer(wanted_role, data=request.data)
@@ -50,6 +53,7 @@ class RoleViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_409_CONFLICT)
 
+    @role_auth_maker({1})
     def destroy(self, request, pk=None, *args, **kwargs):
         to_delete = self.queryset.get(pk=pk)
         to_delete.delete()
@@ -57,12 +61,15 @@ class RoleViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
-    queryset = CmrUser.objects.all()
+    serializer_class = UserSerializer   # setting class serializer, in this case it's user
+    queryset = CmrUser.objects.all()    # setting queryset
     permission_classes = [IsAuthenticated]
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication,)     # setting authentication,
+    # class fields can only be accessed with token
 
-    @role_auth_maker(1)
+    # method that allows admin (and only admin) to create a new user
+
+    @role_auth_maker({1})     # decorator that specifies which role can access the method
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -71,17 +78,54 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # method that allows listing all users, all roles have access
+    # method does not include deleted users
+    # deleted users can be obtained with DeletedUsersViewSet
+
     @role_auth_maker({1, 2, 3})
     def list(self, request, *args, **kwargs):
-        users = CmrUser.objects.all()
+        users = CmrUser.objects.all().filter(is_deleted=False)
         serialized_data = self.serializer_class(users, many=True)
         return Response(serialized_data.data)
 
-    def destroy(self, request, *args, **kwargs):
-        pass
+    # method that allows to set user as deleted, only admin
+    # has access
 
-    def update(self, request, *args, **kwargs):
-        pass
+    @role_auth_maker({1})
+    def destroy(self, request, pk=None, *args, **kwargs):
+        user_to_delete = CmrUser.objects.get(pk=pk)
+        user_to_delete.is_deleted = True
+        user_to_delete.save()
+        return Response(status=status.HTTP_200_OK)
 
-    def retrieve(self, request, *args, **kwargs):
-        pass
+    # method that allows to update single user
+    # only admin and editor have access
+    # in addition is_deleted marker cannot be changed here
+
+    @role_auth_maker({1, 2})
+    def update(self, request, pk=None, *args, **kwargs):
+        user_to_update = CmrUser.objects.get(pk=pk)
+        serializer = self.serializer_class(user_to_update, data=request.data)
+        if serializer.is_valid():
+            if request.data['is_deleted'] == 'True':
+                return JsonResponse({'Message': 'User cannot be deleted here!'}, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # method that allows to retrieve certain user details
+    # if user is deleted, his data can be obtained in DeletedUsersViewSet
+
+    @role_auth_maker({1, 2})
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        retrieved_user = CmrUser.objects.get(pk=pk)
+        if retrieved_user.is_deleted:
+            return JsonResponse({'message': 'user is deleted'}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            serialized_user = self.serializer_class(retrieved_user)
+            return Response(serialized_user.data, status=status.HTTP_200_OK)
+
+
+class DeletedUsersViewSet(viewsets.ModelViewSet):
+    pass

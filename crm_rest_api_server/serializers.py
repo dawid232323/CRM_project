@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CmrUser
         fields = ['id', 'username', 'first_name', 'last_name',
-                  'password', 'date_of_birth', 'role_id', ]
+                  'password', 'date_of_birth', 'role_id', 'is_deleted',]
         extra_kwargs = {'password': {
             'write_only': True,
             'required': True
