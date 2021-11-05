@@ -3,11 +3,12 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views as rf_views
 
 from . import views
-from .views import RoleViewSet, UserViewSet
+
 
 router = DefaultRouter()
-router.register('roles', RoleViewSet, basename='roles')
-router.register('users', UserViewSet, basename='users')
+router.register('roles', views.RoleViewSet, basename='roles')
+router.register('users', views.UserViewSet, basename='users')
+router.register('deleted_users', views.DeletedUsersViewSet, basename='deleted')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -21,6 +21,9 @@ class UserSerializer(serializers.ModelSerializer):
         Token.objects.create(user=new_user)
         return new_user
 
+    # def update(self, instance: CmrUser, validated_data):
+    #     pass
+
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
