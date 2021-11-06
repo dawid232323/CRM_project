@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from crm_rest_api_server.models import CmrUser, Roles
+from crm_rest_api_server.models import CmrUser, Roles, Business, Company
 from rest_framework.authtoken.views import Token
 
 # TODO add token authorization to UserSerializer
@@ -31,4 +31,14 @@ class RoleSerializer(serializers.ModelSerializer):
         fields = ['id', 'role_name']
 
 
+class BusinessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Business
+        fields = ['id', 'business_name']
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = '__all__'
 

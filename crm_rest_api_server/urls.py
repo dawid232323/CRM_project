@@ -9,9 +9,12 @@ router = DefaultRouter()
 router.register('roles', views.RoleViewSet, basename='roles')
 router.register('users', views.UserViewSet, basename='users')
 router.register('deleted_users', views.DeletedUsersViewSet, basename='deleted')
+router.register('business', views.BusinessViewSet, basename='business')
+router.register('companies', views.CompaniesViewSet, basename='companies')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('request_token', rf_views.obtain_auth_token)
+    path('request_token', rf_views.obtain_auth_token),
+    # path('users/', views.UserViewSet.as_view({'get': 'list'}))
     # path('roles/<int:pk>/', RoleViewSet.retrieve),
 ]

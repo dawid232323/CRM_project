@@ -1,16 +1,16 @@
 from django.http import HttpResponse, JsonResponse, Http404
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import APIView
-from rest_framework import generics, mixins, viewsets
+from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.pagination import PageNumberPagination
 
-from crm_rest_api_server.decorators import role_auth_maker, edit_auth
-from crm_rest_api_server.models import Roles, CmrUser
-from crm_rest_api_server.serializers import RoleSerializer, UserSerializer
+from crm_rest_api_server.decorators import role_auth_maker, edit_auth, user_id_auth
+from crm_rest_api_server.models import Roles, CmrUser, Business, Company
+from crm_rest_api_server.serializers import RoleSerializer, UserSerializer, BusinessSerializer, CompanySerializer
 
 
 def index(request):
@@ -22,6 +22,7 @@ class RoleViewSet(viewsets.ModelViewSet):
     queryset = Roles.objects.all()
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication,)
+    pagination_class = PageNumberPagination
 
     @role_auth_maker({1, 2})
     def list(self, request, *args, **kwargs):
@@ -61,11 +62,16 @@ class RoleViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class UserPagination(PageNumberPagination):
+    page_size = 2
+
+
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer  # setting class serializer, in this case it's user
     queryset = CmrUser.objects.all().filter(is_deleted=False)  # setting queryset
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication,)  # setting authentication,
+    pagination_class = UserPagination
 
     # class fields can only be accessed with token
 
@@ -86,9 +92,9 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @role_auth_maker({1, 2, 3})
     def list(self, request, *args, **kwargs):
-        users = self.queryset
-        serialized_data = self.serializer_class(users, many=True)
-        return Response(serialized_data.data)
+        response = super(UserViewSet, self).list(self, request)
+        return self.get_paginated_response(response.data)
+
 
     # method that allows to set user as deleted, only admin
     # has access
@@ -176,3 +182,37 @@ class DeletedUsersViewSet(viewsets.ModelViewSet):   # viewset that handles displ
     def destroy(self, request, *args, **kwargs):
         return JsonResponse({"detail": "user is already deleted!"},
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class BusinessViewSet(viewsets.ModelViewSet):
+    queryset = Business.objects.all()
+    serializer_class = BusinessSerializer
+    pagination_class = UserPagination
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (TokenAuthentication,)
+
+    def list(self, request, *args, **kwargs):
+        page = self.paginate_queryset(self.queryset)
+        if page is not None:
+            serializer = self.serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.serializer_class(self.queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CompaniesViewSet(viewsets.ModelViewSet):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    @user_id_auth({1, 2})
+    def create(self, request, *args, **kwargs):
+        request.data['company_added_by'] = kwargs['user_id']
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
