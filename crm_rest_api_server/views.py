@@ -8,9 +8,10 @@ from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
 
-from crm_rest_api_server.decorators import role_auth_maker, edit_auth, user_id_auth
-from crm_rest_api_server.models import Roles, CmrUser, Business, Company
-from crm_rest_api_server.serializers import RoleSerializer, UserSerializer, BusinessSerializer, CompanySerializer
+from crm_rest_api_server.decorators import role_auth_maker, edit_auth, user_id_auth, filtering_auth
+from crm_rest_api_server.models import Roles, CmrUser, Business, Company, TradeNote
+from crm_rest_api_server.serializers import RoleSerializer, UserSerializer, BusinessSerializer, CompanySerializer, \
+    TradeNoteSerializer
 
 
 def index(request):
@@ -216,3 +217,80 @@ class CompaniesViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def __companies_getter(self, fil_by, condition):
+        if fil_by == 'company_name':
+            wanted_companies = self.paginate_queryset(
+                self.queryset.filter(company_name__contains=condition)
+            )
+        elif fil_by == 'company_business':
+            wanted_companies = self.paginate_queryset(
+                self.queryset.filter(company_business__business_name__contains=condition)
+            )
+        elif fil_by == 'company_city':
+            wanted_companies = self.paginate_queryset(
+                self.queryset.filter(company_city__contains=condition)
+            )
+        return wanted_companies
+
+    @filtering_auth()
+    def list(self, request, *args, **kwargs):
+        if kwargs['filter_by'] and kwargs['filter_condition']:
+            fil_by = kwargs['filter_by']
+            condition = kwargs['filter_condition']
+            try:
+                wanted_companies = self.__companies_getter(fil_by, condition)
+            except ObjectDoesNotExist:
+                return JsonResponse({"detail": "No such object"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            wanted_companies = self.paginate_queryset(queryset=self.queryset)
+        serializer = self.serializer_class(wanted_companies, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    @role_auth_maker({1, 2})
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        return super(CompaniesViewSet, self).retrieve(self, request, pk=None, *args, **kwargs)
+
+    @role_auth_maker({1})
+    def destroy(self, request, pk=None, *args, **kwargs):
+        comp_to_delete = self.queryset.get(pk=pk)
+        comp_to_delete.company_is_deleted = True
+        return Response(self.serializer_class(comp_to_delete).data, status=status.HTTP_200_OK)
+
+
+class TradeNoteViewSet(viewsets.ModelViewSet):
+    queryset = TradeNote.objects.all()
+    serializer_class = TradeNoteSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    @user_id_auth({1, 2})
+    def create(self, request, *args, **kwargs):
+        request.data['note_added_by'] = kwargs['user_id']
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def __get_filtered_list(self, fil_by, condition):
+        if fil_by == 'note_company_id':
+            wanted_companies = self.paginate_queryset(queryset=self.queryset.filter(
+                note_company_id=condition
+            ))
+        elif fil_by == 'note_company_name':
+            wanted_companies = self.paginate_queryset(queryset=self.queryset.filter(
+                note_company_id__company_name__contains=condition
+            ))
+        return wanted_companies
+
+    @filtering_auth()
+    def list(self, request, *args, **kwargs):
+        if kwargs['filter_by'] and kwargs['filter_condition']:
+            wanted_notes = self.__get_filtered_list(kwargs['filter_by'], kwargs['filter_condition'])
+        else:
+            wanted_notes = self.paginate_queryset(queryset=self.queryset)
+        return Response(self.serializer_class(wanted_notes, many=True), status=status.HTTP_200_OK)
+

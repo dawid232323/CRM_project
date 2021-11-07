@@ -19,7 +19,7 @@ def role_auth_maker(role_id):
     return role_auth
 
 
-# Decorator used in edit methods, here user role is bein passed to the method
+# Decorator used in edit methods, here user role is being passed to the method
 # and according to it, the method has different permissions and funcionalities
 
 def edit_auth(view_function):
@@ -48,3 +48,26 @@ def user_id_auth(role_ids):
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
         return wrapper
     return user_id_auth_inside
+
+
+# Decorator used to determine by which conditions queryset must be filtered
+
+def filtering_auth(role_ids={1, 2, 3}):
+    def filtering_auth_inside(view_function):
+        def wrapper(self, request, *args, **kwargs):
+            current_user = CmrUser.objects.get(username=request.user)
+            if current_user.role_id.pk in role_ids:
+                if 'filtering' in request.data.keys():
+                    filtering_dict = request.data['filtering'][0]
+                    return view_function(self, request, *args, **kwargs,
+                                         filter_by=filtering_dict['filter_by'],
+                                         filter_condition=filtering_dict['filter_condition'])
+                else:
+                    return view_function(self, request, *args, **kwargs,
+                                         filter_by=None, filter_condition=None)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return wrapper
+    return filtering_auth_inside
+
+
