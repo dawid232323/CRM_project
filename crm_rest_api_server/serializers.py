@@ -41,12 +41,42 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = '__all__'
+        extra_kwargs = {
+            'company_added_by': {
+                'required': False
+            },
+            'company_is_deleted': {
+                'required': False
+            }
+        }
+
+    def update(self, instance: Company, validated_data):
+        instance.company_name = validated_data.get('company_name', instance.company_name)
+        instance.company_nip = validated_data.get('company_nip', instance.company_nip)
+        instance.company_business = validated_data.get('company_business', instance.company_business)
+        instance.company_address = validated_data.get('company_address', instance.company_address)
+        instance.company_city = validated_data.get('company_city', instance.company_city)
+        return instance
 
 
 class TradeNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = TradeNote
         fields = '__all__'
+        extra_kwargs = {
+            'note_added_by': {
+                'required': False
+            },
+            'note_is_deleted': {
+                'required': False
+            }
+
+        }
+
+    def update(self, instance: TradeNote, validated_data):
+        instance.note_contents = validated_data.get('note_contents', instance.note_contents)
+        instance.note_company_id = validated_data.get('note_company_id', instance.note_company_id)
+        return instance
 
 
 class ContactPersonSerializer(serializers.ModelSerializer):

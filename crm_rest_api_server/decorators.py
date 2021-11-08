@@ -26,10 +26,8 @@ def edit_auth(view_function):
     def wrapper(self, request, *args, **kwargs):
         current_user = CmrUser.objects.get(username=request.user)
         if current_user.role_id.pk == 1:
-            print('confirmed role one')
             return view_function(self, request, *args, **kwargs, role='admin')
         elif current_user.role_id.pk == 2:
-            print('confirmed role two')
             return view_function(self, request, *args, **kwargs, role='editor')
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -52,7 +50,10 @@ def user_id_auth(role_ids):
 
 # Decorator used to determine by which conditions queryset must be filtered
 
-def filtering_auth(role_ids={1, 2, 3}):
+def filtering_auth(role_ids=None):
+    if role_ids is None:
+        role_ids = {1, 2, 3}
+
     def filtering_auth_inside(view_function):
         def wrapper(self, request, *args, **kwargs):
             current_user = CmrUser.objects.get(username=request.user)

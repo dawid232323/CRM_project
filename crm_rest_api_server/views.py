@@ -233,6 +233,9 @@ class CompaniesViewSet(viewsets.ModelViewSet):
             )
         return wanted_companies
 
+    # You don't have to filter by exact value of the paremeter
+    # Filtering handles regex
+
     @filtering_auth()
     def list(self, request, *args, **kwargs):
         if kwargs['filter_by'] and kwargs['filter_condition']:
@@ -257,6 +260,16 @@ class CompaniesViewSet(viewsets.ModelViewSet):
         comp_to_delete.company_is_deleted = True
         return Response(self.serializer_class(comp_to_delete).data, status=status.HTTP_200_OK)
 
+    @edit_auth
+    def update(self, request, pk=None, *args, **kwargs):
+        comp_to_update = get_object_or_404(Company, pk=pk)
+        serializer = self.serializer_class(comp_to_update, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class TradeNoteViewSet(viewsets.ModelViewSet):
     queryset = TradeNote.objects.all()
@@ -268,8 +281,10 @@ class TradeNoteViewSet(viewsets.ModelViewSet):
     @user_id_auth({1, 2})
     def create(self, request, *args, **kwargs):
         request.data['note_added_by'] = kwargs['user_id']
+        print(request.data)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
+            print('serializer is valid')
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
@@ -277,20 +292,49 @@ class TradeNoteViewSet(viewsets.ModelViewSet):
 
     def __get_filtered_list(self, fil_by, condition):
         if fil_by == 'note_company_id':
-            wanted_companies = self.paginate_queryset(queryset=self.queryset.filter(
+            wanted_notes = self.paginate_queryset(queryset=self.queryset.filter(
                 note_company_id=condition
             ))
+            return wanted_notes
         elif fil_by == 'note_company_name':
-            wanted_companies = self.paginate_queryset(queryset=self.queryset.filter(
+            wanted_notes = self.paginate_queryset(queryset=self.queryset.filter(
                 note_company_id__company_name__contains=condition
             ))
-        return wanted_companies
+            return wanted_notes
+        elif fil_by == 'id':
+            wanted_notes = self.paginate_queryset(queryset=self.queryset.filter(
+                pk=condition
+            ))
+            return wanted_notes
+        else:
+            raise ObjectDoesNotExist
 
     @filtering_auth()
     def list(self, request, *args, **kwargs):
         if kwargs['filter_by'] and kwargs['filter_condition']:
-            wanted_notes = self.__get_filtered_list(kwargs['filter_by'], kwargs['filter_condition'])
+            try:
+                wanted_notes = self.__get_filtered_list(kwargs['filter_by'], kwargs['filter_condition'])
+            except ObjectDoesNotExist:
+                return JsonResponse({"detail": "Check your request body"}, status=status.HTTP_400_BAD_REQUEST)
+        elif (not kwargs['filter_by'] and kwargs['filter_condition']) or \
+                (not kwargs['filter_condition'] and kwargs['filter_by']):
+            return JsonResponse({"detail": "Check your request body"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             wanted_notes = self.paginate_queryset(queryset=self.queryset)
-        return Response(self.serializer_class(wanted_notes, many=True), status=status.HTTP_200_OK)
+        return self.get_paginated_response(self.serializer_class(wanted_notes, many=True).data)
 
+    @edit_auth
+    def update(self, request, pk=None, *args, **kwargs):
+        note_to_update: TradeNote = get_object_or_404(TradeNote, pk=pk)
+        serializer = self.serializer_class(note_to_update, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @role_auth_maker({1})
+    def destroy(self, request,pk=None, *args, **kwargs):
+        note_to_delete = get_object_or_404(TradeNote, pk=pk)
+        note_to_delete.note_is_deleted = True
+        return Response(status=status.HTTP_200_OK)
