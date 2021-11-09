@@ -12,6 +12,7 @@ router.register('deleted_users', views.DeletedUsersViewSet, basename='deleted')
 router.register('business', views.BusinessViewSet, basename='business')
 router.register('companies', views.CompaniesViewSet, basename='companies')
 router.register('notes', views.TradeNoteViewSet, basename='trade notes')
+router.register('contacts', views.ContactPersonViewSet, basename='contact person')
 
 urlpatterns = [
     path('', include(router.urls)),

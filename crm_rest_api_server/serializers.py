@@ -83,4 +83,20 @@ class ContactPersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactPerson
         fields = '__all__'
+        extra_kwargs = {
+            'contact_added_by': {
+                'required': False
+            },
+            'contact_is_deleted': {
+                'required': False
+            }
+        }
 
+    def update(self, instance: ContactPerson, validated_data):
+        instance.contact_name = validated_data.get('contact_name', instance.contact_name)
+        instance.contact_surname = validated_data.get('contact_surname', instance.contact_surname)
+        instance.contact_phone = validated_data.get('contact_phone', instance.contact_phone)
+        instance.contact_mail = validated_data.get('contact_mail', instance.contact_mail)
+        instance.contact_position = validated_data.get('contact_position', instance.contact_position)
+        instance.contact_company = validated_data.get('contact_company', instance.contact_company)
+        return instance

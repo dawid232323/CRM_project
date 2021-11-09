@@ -1,11 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-# TODO add companies, trade note, contact person
-
 
 class Roles(models.Model):
     role_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.role_name
 
 
 class CmrUser(User):
@@ -14,9 +15,15 @@ class CmrUser(User):
     role_id = models.ForeignKey(Roles, on_delete=models.CASCADE)
     is_deleted = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.username
+
 
 class Business(models.Model):
     business_name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.business_name
 
 
 class Company(models.Model):
@@ -30,6 +37,9 @@ class Company(models.Model):
     company_added_by = models.ForeignKey(CmrUser, on_delete=models.CASCADE)
     company_is_deleted = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.company_name
+
 
 class TradeNote(models.Model):
     class Meta:
@@ -38,6 +48,10 @@ class TradeNote(models.Model):
     note_is_deleted = models.BooleanField(default=False)
     note_company_id = models.ForeignKey(Company, on_delete=models.CASCADE)
     note_added_by = models.ForeignKey(CmrUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'Added by {self.note_added_by.username} to the {self.note_company_id.company_name} ' \
+               f'company'
 
 
 class ContactPerson(models.Model):
@@ -52,3 +66,5 @@ class ContactPerson(models.Model):
     contact_added_by = models.ForeignKey(CmrUser, on_delete=models.CASCADE)
     contact_is_deleted = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f'{self.contact_name} {self.contact_surname}'

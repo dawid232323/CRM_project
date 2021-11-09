@@ -9,9 +9,9 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
 
 from crm_rest_api_server.decorators import role_auth_maker, edit_auth, user_id_auth, filtering_auth
-from crm_rest_api_server.models import Roles, CmrUser, Business, Company, TradeNote
+from crm_rest_api_server.models import Roles, CmrUser, Business, Company, TradeNote, ContactPerson
 from crm_rest_api_server.serializers import RoleSerializer, UserSerializer, BusinessSerializer, CompanySerializer, \
-    TradeNoteSerializer
+    TradeNoteSerializer, ContactPersonSerializer
 
 
 def index(request):
@@ -337,4 +337,54 @@ class TradeNoteViewSet(viewsets.ModelViewSet):
     def destroy(self, request,pk=None, *args, **kwargs):
         note_to_delete = get_object_or_404(TradeNote, pk=pk)
         note_to_delete.note_is_deleted = True
+        return Response(status=status.HTTP_200_OK)
+
+
+class ContactPersonViewSet(viewsets.ModelViewSet):
+    queryset = ContactPerson.objects.all()
+    serializer_class = ContactPersonSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    @user_id_auth({1, 2})
+    def create(self, request, *args, **kwargs):
+        request.data['contact_added_by'] = kwargs['user_id']
+        serialised_data = self.serializer_class(data=request.data)
+        if serialised_data.is_valid():
+            serialised_data.save()
+            return Response(serialised_data.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serialised_data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def __response_generator(self, fil_by, condition):
+        if fil_by == 'contact_surname':
+            wanted_contacts = self.paginate_queryset(self.queryset.filter(contact_surname__contains=condition))
+            return self.get_paginated_response(self.serializer_class(wanted_contacts, many=True).data)
+        else:
+            return JsonResponse({"detail": f"No elements with {fil_by} filter by {condition}"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+    @filtering_auth()
+    def list(self, request, *args, **kwargs):
+        if kwargs['filter_by'] and kwargs['filter_condition']:
+            return self.__response_generator(kwargs['filter_by'], kwargs['filter_condition'])
+        else:
+            contacts = self.paginate_queryset(queryset=self.queryset)
+            return self.get_paginated_response(self.serializer_class(contacts, many=True).data)
+
+    @role_auth_maker({1, 2})
+    def update(self, request, pk=None, *args, **kwargs):
+        retrieved_contact = get_object_or_404(ContactPerson, pk=pk)
+        serialzer = self.serializer_class(retrieved_contact, data=request.data)
+        if serialzer.is_valid():
+            serialzer.save()
+            return Response(serialzer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serialzer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @role_auth_maker({1})
+    def destroy(self, request, pk=None, *args, **kwargs):
+        contact_to_delete = get_object_or_404(ContactPerson, pk=pk)
+        contact_to_delete.contact_is_deleted = True
         return Response(status=status.HTTP_200_OK)
