@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-g)iwa(n06xmeuz#n$h&i4na+n+!ov7+5ep!8%&f2gvvxx$5fse
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+CORS_ORIGIN_ALLOW_ALL = True
+
+ALLOWED_HOSTS = ['*']
 
 APPEND_SLASH = False
 
@@ -41,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'crm_rest_api_server',
     'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
@@ -56,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'CRM_Project.urls'

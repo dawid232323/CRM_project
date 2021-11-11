@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/CRM_Project.iml" filepath="$PROJECT_DIR$/.idea/CRM_Project.iml" />
+      <module fileurl="file://$USER_HOME$/PycharmProjects/articleApp/articles-frontend/.idea/articles-frontend.iml" filepath="$USER_HOME$/PycharmProjects/articleApp/articles-frontend/.idea/articles-frontend.iml" />
       <module fileurl="file://$USER_HOME$/PycharmProjects/articleApp/articlesAPI/.idea/articlesAPI.iml" filepath="$USER_HOME$/PycharmProjects/articleApp/articlesAPI/.idea/articlesAPI.iml" />
     </modules>
   </component>

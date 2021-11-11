@@ -16,7 +16,7 @@ router.register('contacts', views.ContactPersonViewSet, basename='contact person
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('request_token', rf_views.obtain_auth_token),
+    path('request_token/', rf_views.obtain_auth_token),
     # path('users/', views.UserViewSet.as_view({'get': 'list'}))
     # path('roles/<int:pk>/', RoleViewSet.retrieve),
 ]
