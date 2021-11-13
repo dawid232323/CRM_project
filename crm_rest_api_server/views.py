@@ -1,6 +1,7 @@
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,6 +17,34 @@ from crm_rest_api_server.serializers import RoleSerializer, UserSerializer, Busi
 
 def index(request):
     return HttpResponse('Hello world')
+
+
+class shortUserDetails(viewsets.ModelViewSet):
+    serializer_class = UserSerializer
+    queryset = CmrUser.objects.all()
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (TokenAuthentication,)
+
+    def list(self, request, *args, **kwargs):
+        wanted_user = get_object_or_404(CmrUser, username=request.user)
+        return JsonResponse({
+                "username": f'{wanted_user.username}',
+                "role": f'{wanted_user.role_id.pk}',
+                "user_id": f'{wanted_user.pk}'
+            }, status=status.HTTP_200_OK
+        )
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class RoleViewSet(viewsets.ModelViewSet):
@@ -72,7 +101,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = CmrUser.objects.all().filter(is_deleted=False)  # setting queryset
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication,)  # setting authentication,
-    pagination_class = UserPagination
+    pagination_class = PageNumberPagination
 
     # class fields can only be accessed with token
 
@@ -94,7 +123,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @role_auth_maker({1, 2, 3})
     def list(self, request, *args, **kwargs):
         response = super(UserViewSet, self).list(self, request)
-        return self.get_paginated_response(response.data)
+        return response
 
 
     # method that allows to set user as deleted, only admin

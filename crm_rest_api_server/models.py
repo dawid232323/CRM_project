@@ -10,6 +10,8 @@ class Roles(models.Model):
 
 
 class CmrUser(User):
+    class Meta:
+        ordering = ['-id']
     # present fields: first_name, last_name, username
     date_of_birth = models.DateField()
     role_id = models.ForeignKey(Roles, on_delete=models.CASCADE)

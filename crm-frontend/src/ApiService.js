@@ -8,4 +8,15 @@ export default class ApiService {
             body:JSON.stringify({username, password})
         }).then(resp => resp.json())
     }
+
+    static getCompaniesList (token, request_body = null) {
+        return fetch("http://localhost:8000/cmr/companies/", {
+            'method': 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${token}`
+            },
+            // body: JSON.stringify(request_body)
+        }).then(resp => resp.json())
+    }
 }

@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import "../App.css"
 import ApiService from "../ApiService";
 import {useNavigate} from "react-router-dom";
-
+import {useCookies} from "react-cookies"
 
 
 export default function Login() {
@@ -12,14 +12,17 @@ export default function Login() {
     const[token, setToken] = useState('')
     let navigate = useNavigate()
 
+    const jwt = require('jsonwebtoken')
+
     useEffect( () => {
         if (token) {
+            console.log(token)
             navigate('/home')
             fetch("http://localhost:8000/cmr/users/", {
                 'method': 'GET',
                 headers: {
                     'Content-Type':'application/json',
-                    // 'Authorization':`Token ${token}`
+                    'Authorization':`Token ${token}`
                 }
             })
                 .then(resp => resp.json())
@@ -27,7 +30,7 @@ export default function Login() {
                 .catch(error => console.error())
             console.log(token)
         }
-    })
+    }, [token])
 
     const obtain_auth_token = () => {
         ApiService.obtainToken(username, password)

@@ -13,6 +13,7 @@ router.register('business', views.BusinessViewSet, basename='business')
 router.register('companies', views.CompaniesViewSet, basename='companies')
 router.register('notes', views.TradeNoteViewSet, basename='trade notes')
 router.register('contacts', views.ContactPersonViewSet, basename='contact person')
+router.register('user_token_details', views.shortUserDetails, basename='short_user')
 
 urlpatterns = [
     path('', include(router.urls)),

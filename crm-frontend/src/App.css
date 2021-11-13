@@ -46,6 +46,19 @@
   color: rgba(248,248,248,0.87);
 }
 
+.panelBackground {
+  background-color: darkgrey;
+  padding-top: 3%;
+  color: rgba(248,248,248,0.87);
+  min-height: 100vh;
+  text-align: left;
+}
+
+.panelTextFields {
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
 .inputOne {
   max-width: 20%;
 }
@@ -61,4 +74,9 @@
   font-weight: bold;
   top: -1px;
   box-shadow: none;
+}
+
+.myContainer {
+  margin: 0;
+  padding: 0;
 }
