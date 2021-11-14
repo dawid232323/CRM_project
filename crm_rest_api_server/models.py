@@ -14,7 +14,7 @@ class CmrUser(User):
         ordering = ['-id']
     # present fields: first_name, last_name, username
     date_of_birth = models.DateField()
-    role_id = models.ForeignKey(Roles, on_delete=models.CASCADE)
+    role_id = models.ForeignKey(Roles, on_delete=models.CASCADE, related_name='role')
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):

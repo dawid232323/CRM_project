@@ -1,7 +1,7 @@
 import React from "react";
-import Select from "react-select/base";
 import CompaniesPanel from "./companiesPanel";
 import {Container, Row, Col} from "react-grid-system";
+import {Link, Navigate, Outlet} from "react-router-dom";
 
 class MainPanel2 extends React.Component {
 
@@ -26,7 +26,9 @@ class MainPanel2 extends React.Component {
         users: [],
         role: '',
         id: '',
-        username: ''
+        username: '',
+        redirect: null,
+
     }
 
     setUser = (response) => {
@@ -55,6 +57,7 @@ class MainPanel2 extends React.Component {
         }).then(response => response.json())
             .then(response => this.setAfterFetch(response))
             .catch(error => console.log(error))
+        this.props.setToken(this.token)
     };
 
     setAfterFetch = (response) => {
@@ -112,6 +115,8 @@ class MainPanel2 extends React.Component {
                                                 <th scope="col">Last Name</th>
                                                 <th scope="col">Date of Birth</th>
                                                 <th scope="col">Role ID</th>
+                                                {this.state.role === "1" ?
+                                                <th scope="col">Additional Options</th>: null}
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -123,6 +128,22 @@ class MainPanel2 extends React.Component {
                                                     <td>{user.last_name}</td>
                                                     <td>{user.date_of_birth}</td>
                                                     <td>{user.role_id}</td>
+                                                    {this.state.role === "1" ?
+                                                        <td>
+                                                            <Container>
+                                                                <Row>
+                                                                    <Col md={3}>
+                                                                        <button className="btn btn-primary">
+                                                                            <Link className="text-white" to={`/edit_user/${user.id}`}>Edit User</Link>
+                                                                        </button>
+                                                                    </Col>
+                                                                    <Col md={4}>
+                                                                        <button className="btn btn-danger">Delete User</button>
+                                                                    </Col>
+                                                                </Row>
+                                                            </Container>
+                                                        </td> :null}
+
                                                 </tr>
                                                 ))}
                                         </tbody>
@@ -135,7 +156,9 @@ class MainPanel2 extends React.Component {
                                 <button className="btn btn-primary" onClick={this.fetchNext}>Next</button>
                             </Col>
                             <Col md={2}>
-                                {this.state.role === "1" ? <button className="btn btn-success">Add new User</button> : null}
+                                {this.state.role === "1" ? <button className="btn btn-success">
+                                    <Link className="text-white" to={"/new_user"} >Create New user</Link>
+                                </button> : null}
                             </Col>
                         </Row>
                         <br/>
@@ -150,10 +173,12 @@ class MainPanel2 extends React.Component {
                             </Col>
                         </Row>
                     </Container>
+
                 </div>
+                {/*<Outlet/>*/}
             </div>
         );
-    }
+        }
 }
 
 export default MainPanel2

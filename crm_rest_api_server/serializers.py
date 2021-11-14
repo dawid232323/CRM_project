@@ -3,17 +3,17 @@ from rest_framework import serializers
 from crm_rest_api_server.models import CmrUser, Roles, Business, Company, TradeNote, ContactPerson
 from rest_framework.authtoken.views import Token
 
-# TODO add token authorization to UserSerializer
-
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.StringRelatedField()
+
     class Meta:
         model = CmrUser
         fields = ['id', 'username', 'first_name', 'last_name',
-                  'password', 'date_of_birth', 'role_id', 'is_deleted',]
+                  'password', 'date_of_birth', 'role_id', 'is_deleted', 'role', ]
         extra_kwargs = {'password': {
             'write_only': True,
-            'required': True
+            'required': False
         }}
 
     def create(self, validated_data):
