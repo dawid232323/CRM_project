@@ -1,5 +1,6 @@
 import React from "react";
 import ApiService from "../ApiService";
+import {Link} from "react-router-dom";
 
 class CompaniesPanel extends React.Component {
     constructor(props) {
@@ -41,10 +42,14 @@ class CompaniesPanel extends React.Component {
                                 <th scope="row">{company.id}</th>
                                 <td>{company.company_name}</td>
                                 <td>{company.company_nip}</td>
+                                <td>
+                                    <Link to={`/company/${company.id}/`}>Details</Link>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+                {this.props.filter_by}
             </div>
         );
     }

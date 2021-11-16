@@ -8,8 +8,9 @@ from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
 
-from crm_rest_api_server.decorators import role_auth_maker, edit_auth, user_id_auth, filtering_auth
+from crm_rest_api_server.decorators import role_auth_maker, edit_auth, user_id_auth, filtering_auth, function_authorizer
 from crm_rest_api_server.models import Roles, CmrUser, Business, Company, TradeNote, ContactPerson
 from crm_rest_api_server.serializers import RoleSerializer, UserSerializer, BusinessSerializer, CompanySerializer, \
     TradeNoteSerializer, ContactPersonSerializer
@@ -28,10 +29,10 @@ class shortUserDetails(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         wanted_user = get_object_or_404(CmrUser, username=request.user)
         return JsonResponse({
-                "username": f'{wanted_user.username}',
-                "role": f'{wanted_user.role_id.pk}',
-                "user_id": f'{wanted_user.pk}'
-            }, status=status.HTTP_200_OK
+            "username": f'{wanted_user.username}',
+            "role": f'{wanted_user.role_id.pk}',
+            "user_id": f'{wanted_user.pk}'
+        }, status=status.HTTP_200_OK
         )
 
     def create(self, request, *args, **kwargs):
@@ -125,7 +126,6 @@ class UserViewSet(viewsets.ModelViewSet):
         response = super(UserViewSet, self).list(self, request)
         return response
 
-
     # method that allows to set user as deleted, only admin
     # has access
 
@@ -176,7 +176,7 @@ class UserViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_404_NOT_FOUND)
 
 
-class DeletedUsersViewSet(viewsets.ModelViewSet):   # viewset that handles displaying and interacting with deleted users
+class DeletedUsersViewSet(viewsets.ModelViewSet):  # viewset that handles displaying and interacting with deleted users
     queryset = CmrUser.objects.all().filter(is_deleted=True)
     authentication_classes = (TokenAuthentication,)
     permission_classes = [IsAuthenticated]
@@ -222,10 +222,6 @@ class BusinessViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
 
     def list(self, request, *args, **kwargs):
-        page = self.paginate_queryset(self.queryset)
-        if page is not None:
-            serializer = self.serializer_class(page, many=True)
-            return self.get_paginated_response(serializer.data)
         serializer = self.serializer_class(self.queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -363,7 +359,7 @@ class TradeNoteViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @role_auth_maker({1})
-    def destroy(self, request,pk=None, *args, **kwargs):
+    def destroy(self, request, pk=None, *args, **kwargs):
         note_to_delete = get_object_or_404(TradeNote, pk=pk)
         note_to_delete.note_is_deleted = True
         return Response(status=status.HTTP_200_OK)
@@ -417,3 +413,34 @@ class ContactPersonViewSet(viewsets.ModelViewSet):
         contact_to_delete = get_object_or_404(ContactPerson, pk=pk)
         contact_to_delete.contact_is_deleted = True
         return Response(status=status.HTTP_200_OK)
+
+
+class FilterViewSet(viewsets.ModelViewSet):
+    serializer_class = UserSerializer  # setting class serializer, in this case it's user
+    queryset = CmrUser.objects.all().filter(is_deleted=False)  # setting queryset
+    permission_classes = [IsAuthenticated]
+    authentication_classes = (TokenAuthentication,)  # setting authentication,
+    pagination_class = PageNumberPagination
+
+    def __filter_users(self, filter_condition, filter_by):
+        wanted_users = None
+        if filter_condition == 'username':
+            wanted_users = self.paginate_queryset(CmrUser.objects.all().filter(username__contains=filter_by))
+        elif filter_condition == 'last_name':
+            wanted_users = self.paginate_queryset(CmrUser.objects.all().filter(last_name__contains=filter_by))
+        elif not wanted_users:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = UserSerializer(wanted_users, many=True)
+        return self.get_paginated_response(serializer.data)
+        # return self.get_paginated_response(serializer.data)
+
+    def __filter_companies(self, filter_condition, filter_by):
+        pass
+
+    @role_auth_maker({1, 2, 3})
+    def list(self, request, filter_object=None, filter_by=None, filter_condition=None, *args, **kwargs):
+        print('entering list')
+        if filter_object == 'users':
+            return self.__filter_users(filter_by, filter_condition)
+        elif filter_object == 'companies':
+            return self.__filter_companies(filter_by, filter_condition)

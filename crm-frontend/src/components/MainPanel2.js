@@ -2,6 +2,9 @@ import React from "react";
 import CompaniesPanel from "./companiesPanel";
 import {Container, Row, Col} from "react-grid-system";
 import {Link, Navigate, Outlet} from "react-router-dom";
+import ApiService from "../ApiService";
+import {Cookies, withCookies} from "react-cookie"
+import {instanceOf} from "prop-types"
 
 class MainPanel2 extends React.Component {
 
@@ -12,15 +15,31 @@ class MainPanel2 extends React.Component {
         this.headers = {'Content-Type':'application/json', 'Authorization':`Token ${this.token}`}
         this._next_page = null;
         this._previous_page = null;
+        this.setAfterFetch = this.setAfterFetch.bind(this)
+        this.userSetter = this.userSetter.bind(this)
+        this.filter_users = this.filter_users.bind(this)
+        this.handleCookie = this.handleCookie.bind(this)
+
         fetch('http://127.0.0.1:8000/cmr/user_token_details/', {
             'method': 'GET',
             headers: this.headers
         }).then(response => response.json())
-            .then(response => this.setState({role: response.role,
-        id: response.user_id, username: response.username}))
-        console.log( `ROLE IS ${this.state.role}`)
+            .then(response => {
+                this.setState({id: response.user_id, username: response.username})
+                this.handleCookie(response.role)
+            })
     }
 
+    handleCookie = (role_id) => {
+        console.log(`setting cookie role is ${role_id}`)
+        const {cookies} = this.props;
+        cookies.set("user_role", role_id, {path: "/"});
+        this.setState({role: cookies.get("user_role")})
+    }
+
+    static propTypes = {
+        cookies: instanceOf(Cookies).isRequired
+    }
 
     state = {
         users: [],
@@ -28,7 +47,8 @@ class MainPanel2 extends React.Component {
         id: '',
         username: '',
         redirect: null,
-
+        filter_by: '',
+        filter_condition: '',
     }
 
     setUser = (response) => {
@@ -43,21 +63,30 @@ class MainPanel2 extends React.Component {
             'method': 'GET',
             headers: this.headers
         }).then(response => response.json())
-            .then(response => this.setState({role: response.role,
-        id: response.user_id, username: response.username}))
+            .then(response => {
+                this.setState({
+                    id: response.user_id, username: response.username})
+                this.handleCookie(response.role)
+            })
             .catch(error => console.log(error))
         // console.log(`role is ${this._user_role}, username is ${this._username}`)
     }
 
     componentDidMount() {
+        console.log('mounting')
         this.userSetter()
         fetch(this.main_link, {
             'method': 'GET',
             headers : this.headers
         }).then(response => response.json())
-            .then(response => this.setAfterFetch(response))
-            .catch(error => console.log(error))
+            .then((response) => {
+                this.setState({users: response.results})
+                this._next_page = response.next
+                this._previous_page = response.previous
+            })
+            .catch(error => alert(error))
         this.props.setToken(this.token)
+        this.props.setRole(this._user_role)
     };
 
     setAfterFetch = (response) => {
@@ -86,6 +115,15 @@ class MainPanel2 extends React.Component {
         if (this._previous_page) {
             this.fetchUsers(this._previous_page)
         }
+    }
+
+    filter_users = () => {
+        ApiService.FilterUsers(this.token, this.state.filter_by, this.state.filter_condition)
+            .then(response => {
+                this.setState({users: response.results})
+                this._next_page = response.next
+                this._previous_page = response.previous
+            }).catch(error => alert(error))
     }
 
     render() {
@@ -160,6 +198,27 @@ class MainPanel2 extends React.Component {
                                     <Link className="text-white" to={"/new_user"} >Create New user</Link>
                                 </button> : null}
                             </Col>
+                                <select value={this.state.filter_by}
+                                        onChange={event => this.setState({filter_by: event.target.value})}
+                                placeholder="Filter By" className="form-select-sm">
+                                    <option selected>Filter By</option>
+                                    <option value="username">Username</option>
+                                    <option value="last_name">Last Name</option>
+                                </select>
+                            <Col md={2}>
+                                <input value={this.state.filter_condition} placeholder="Type filter condition"
+                                onChange={event => this.setState({filter_condition: event.target.value})}
+                                className="form-control"/>
+                            </Col>
+                            <Col md={2}>
+                                <button className="btn btn-success" onClick={this.filter_users}>Filter</button>
+                                <button className="btn btn-danger" onClick={() => {
+                                    this.fetchUsers(this.main_link)
+                                    this.setState({filter_by: '', filter_condition: ''})
+                                }}>
+                                    Clear Filters
+                                </button>
+                            </Col>
                         </Row>
                         <br/>
                         <Row>
@@ -169,7 +228,7 @@ class MainPanel2 extends React.Component {
                         </Row>
                         <Row>
                             <Col md={6}>
-                                <CompaniesPanel role_id={this.state.role} token={this.token}/>
+                                <CompaniesPanel role_id={this.state.role} token={this.token} filter_by={this.state.filter_by}/>
                             </Col>
                         </Row>
                     </Container>
@@ -181,5 +240,5 @@ class MainPanel2 extends React.Component {
         }
 }
 
-export default MainPanel2
+export default withCookies(MainPanel2)
 

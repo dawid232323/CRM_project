@@ -72,3 +72,17 @@ def filtering_auth(role_ids=None):
     return filtering_auth_inside
 
 
+def function_authorizer(role_ids={1, 2, 3}):
+    def function_authorizer_inside(view_function):
+        def wrapper(request, *args, **kwargs):
+            print(f'user is {request.user}')
+            current_user = CmrUser.objects.get(username=request.user)
+            if current_user.role_id.pk in role_ids:
+                return view_function(request, *args, **kwargs)
+            else:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return wrapper
+    return function_authorizer_inside
+
+
+

@@ -53,4 +53,35 @@ export default class ApiService {
         body: JSON.stringify(request_body)}
         ).then(response => response.json())
     }
+
+    static FilterUsers(auth_token, filter_by, filter_condition) {
+        return fetch(`http://127.0.0.1:8000/cmr/filter/users_${filter_by}=${filter_condition}/`, {
+            'method': 'GET',
+            headers: {
+               'Content-Type': 'application/json',
+                'Authorization': `Token ${auth_token}`
+            }
+        }).then(response => response.json())
+    }
+
+    static GetCompanyDetails(auth_token, company_id) {
+        return fetch(`http://localhost:8000/cmr/companies/${company_id}/`, {
+            'method': 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${auth_token}`
+            },
+            // body: JSON.stringify(request_body)
+        }).then(resp => resp.json())
+    }
+
+    static ListBuisinesses(auth_token) {
+        return fetch(`http://127.0.0.1:8000/cmr/business/`, {
+            'method': 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${auth_token}`
+            },
+        }).then(resp => resp.json())
+    }
 }

@@ -80,3 +80,12 @@
   margin: 0;
   padding: 0;
 }
+
+.detailsBackground {
+  background-color: darkgrey;
+  min-height: 100vh;
+  padding-top: 2%;
+  padding-left: 2%;
+  color: rgba(248,248,248,0.87);
+  font-family: Arial, serif;
+}
