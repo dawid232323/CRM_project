@@ -1,3 +1,5 @@
+@import "~react-pro-sidebar/dist/css/styles.css";
+
 .App {
   text-align: center;
 }
@@ -48,10 +50,12 @@
 
 .panelBackground {
   background-color: darkgrey;
-  padding-top: 3%;
+  /*xpadding-top: 3%;*/
   color: rgba(248,248,248,0.87);
   min-height: 100vh;
   text-align: left;
+  /*position: relative;*/
+  /*z-index: 1;*/
 }
 
 .panelTextFields {
@@ -79,6 +83,8 @@
 .myContainer {
   margin: 0;
   padding: 0;
+  background-color: darkgrey;
+  min-height: 100vh;
 }
 
 .detailsBackground {
@@ -88,4 +94,9 @@
   padding-left: 2%;
   color: rgba(248,248,248,0.87);
   font-family: Arial, serif;
+}
+
+.myCol {
+  position: relative;
+  z-index: 1;
 }

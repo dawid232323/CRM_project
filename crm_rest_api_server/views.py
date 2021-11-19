@@ -144,7 +144,6 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @edit_auth
     def update(self, request, pk=None, *args, **kwargs):
-        print(kwargs)
         try:
             user_to_update = self.queryset.get(pk=pk)
         except ObjectDoesNotExist:
@@ -285,15 +284,10 @@ class CompaniesViewSet(viewsets.ModelViewSet):
         comp_to_delete.company_is_deleted = True
         return Response(self.serializer_class(comp_to_delete).data, status=status.HTTP_200_OK)
 
-    @edit_auth
-    def update(self, request, pk=None, *args, **kwargs):
-        comp_to_update = get_object_or_404(Company, pk=pk)
-        serializer = self.serializer_class(comp_to_update, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # @edit_auth
+    # def update(self, request, pk=None, *args, **kwargs):
+    #     response = super().update(self, request, pk=pk)
+    #     return response
 
 
 class TradeNoteViewSet(viewsets.ModelViewSet):
@@ -435,12 +429,24 @@ class FilterViewSet(viewsets.ModelViewSet):
         # return self.get_paginated_response(serializer.data)
 
     def __filter_companies(self, filter_condition, filter_by):
-        pass
+        wanted_companies = None
+        print(f'filter condition is {filter_condition} filter by is {filter_by}')
+        if filter_condition == 'businessName':
+            print('entered condition')
+            wanted_companies = self.paginate_queryset(Company.objects.all().filter(company_business__business_name__contains=filter_by))
+        elif filter_condition == 'businessID':
+            wanted_companies = self.paginate_queryset(Company.objects.all().filter(company_business__contains=filter_by))
+        elif filter_by == 'date':
+            pass
+        serializer = CompanySerializer(wanted_companies, many=True)
+        print(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @role_auth_maker({1, 2, 3})
     def list(self, request, filter_object=None, filter_by=None, filter_condition=None, *args, **kwargs):
-        print('entering list')
+        print(f'{filter_object} {filter_by} {filter_condition}')
         if filter_object == 'users':
             return self.__filter_users(filter_by, filter_condition)
         elif filter_object == 'companies':
+            print('entering first if')
             return self.__filter_companies(filter_by, filter_condition)

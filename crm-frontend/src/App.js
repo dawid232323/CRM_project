@@ -1,12 +1,25 @@
 import './App.css';
-import React from "react";
-import MainPanel from "./components/mainPanel"
-import MainPanel2 from "./components/MainPanel2";
+import React, {useEffect, useState} from "react";
+import NavBar from "./components/navigation/NavBar";
+import ApiService from "./ApiService";
+import cookie from "react-cookies";
 
 function App(props) {
-  return (
+
+    const [role, setRole] = useState()
+    const [token, setToken] = useState("3830179166ab484e973a682262156bb16b6490e5")
+
+    useEffect(() => {
+        ApiService.GetUserShortData(token)
+            .then(response => {
+                setRole(response.role)
+                cookie.save("user_role", role, {path: '/'})
+            })
+    })
+
+    return (
     <div className="App">
-        <MainPanel2 setToken={props.setToken} setRole={props.setRole}/>
+        <NavBar/>
     </div>
   );
 }

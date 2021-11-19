@@ -1,144 +1,60 @@
 import React from "react";
-import CompaniesPanel from "../pages/companiesPanel";
-import {Container, Row, Col} from "react-grid-system";
-import {Link} from "react-router-dom";
+import cookie from "react-cookies"
 import ApiService from "../ApiService";
-import {Cookies, withCookies} from "react-cookie"
-import {instanceOf} from "prop-types"
+import {Col, Container, Row} from "react-grid-system";
+import {Link} from "react-router-dom";
+import {GrFormNextLink, GrFormPreviousLink} from "react-icons/gr"
+import {IconContext} from "react-icons";
 
-class MainPanel2 extends React.Component {
+class UsersList extends React.Component{
 
-    constructor() {
-        super();
-        this.token = "3830179166ab484e973a682262156bb16b6490e5";
-        this.main_link = 'http://127.0.0.1:8000/cmr/users/'
-        this.headers = {'Content-Type':'application/json', 'Authorization':`Token ${this.token}`}
-        this._next_page = null;
-        this._previous_page = null;
-        this.setAfterFetch = this.setAfterFetch.bind(this)
-        this.userSetter = this.userSetter.bind(this)
+    constructor(props) {
+        super(props);
+        this.token = "3830179166ab484e973a682262156bb16b6490e5"
         this.filter_users = this.filter_users.bind(this)
-        this.handleCookie = this.handleCookie.bind(this)
-
-        fetch('http://127.0.0.1:8000/cmr/user_token_details/', {
-            'method': 'GET',
-            headers: this.headers
-        }).then(response => response.json())
-            .then(response => {
-                this.setState({id: response.user_id, username: response.username})
-                this.handleCookie(response.role)
-            })
-    }
-
-    handleCookie = (role_id) => {
-        console.log(`setting cookie role is ${role_id}`)
-        const {cookies} = this.props;
-        cookies.set("user_role", role_id, {path: "/"});
-        this.setState({role: cookies.get("user_role")})
-    }
-
-    static propTypes = {
-        cookies: instanceOf(Cookies).isRequired
+        this.setBasicData = this.setBasicData.bind(this)
+        this.fetchUsers = this.fetchUsers.bind(this)
     }
 
     state = {
         users: [],
         role: '',
-        id: '',
         username: '',
-        redirect: null,
         filter_by: '',
         filter_condition: '',
+        next_page: '',
+        previous_page: ''
     }
 
-    setUser = (response) => {
-        this._user_role = response.role
-        this._username = response.username;
-        this._user_id = response.user_id;
-
-    }
-
-    userSetter = () => {
-        fetch('http://127.0.0.1:8000/cmr/user_token_details/', {
-            'method': 'GET',
-            headers: this.headers
-        }).then(response => response.json())
-            .then(response => {
-                this.setState({
-                    id: response.user_id, username: response.username})
-                this.handleCookie(response.role)
-            })
-            .catch(error => console.log(error))
-        // console.log(`role is ${this._user_role}, username is ${this._username}`)
+    setBasicData(response) {
+        this.setState({users: response.results, next_page: response.next,
+                previous_page: response.previous})
     }
 
     componentDidMount() {
-        console.log('mounting')
-        this.userSetter()
-        fetch(this.main_link, {
-            'method': 'GET',
-            headers : this.headers
-        }).then(response => response.json())
-            .then((response) => {
-                this.setState({users: response.results})
-                this._next_page = response.next
-                this._previous_page = response.previous
-            })
-            .catch(error => alert(error))
-        // this.props.setToken(this.token)
-        // this.props.setRole(this._user_role)
-    };
-
-    setAfterFetch = (response) => {
-        this.setState({ users: response.results})
-        console.log(`next will be ${response.next}`)
-        this._next_page = response.next
-        this._previous_page = response.previous
+        this.setState({role: cookie.load('user_role')})
+        ApiService.ListUsers("3830179166ab484e973a682262156bb16b6490e5")
+            .then((response) => this.setBasicData(response))
     }
 
-    fetchUsers = (link) => {
-        fetch(link, {
-            'method': 'GET',
-            headers: this.headers
-        }).then(response => response.json())
-            .then(response => this.setAfterFetch(response))
-            .catch(error => console.log(error))
-    }
-
-    fetchNext = () => {
-        if (this._next_page) {
-            this.fetchUsers(this._next_page)
-        }
-    }
-
-    fetchPrevious = () => {
-        if (this._previous_page) {
-            this.fetchUsers(this._previous_page)
-        }
-    }
-
-    filter_users = () => {
+    filter_users() {
         ApiService.FilterUsers(this.token, this.state.filter_by, this.state.filter_condition)
-            .then(response => {
-                this.setState({users: response.results})
-                this._next_page = response.next
-                this._previous_page = response.previous
-            }).catch(error => alert(error))
+            .then((response) => this.setBasicData(response))
+            .catch(error => alert(error))
+    }
+
+    fetchUsers(link) {
+        ApiService.ListUsers(this.token, link)
+            .then((response) => this.setBasicData(response))
     }
 
     render() {
         return (
-            <div className="panelBackground">
-                <div className="panelTextFields">
-                    <Container fluid className="myContainer">
+            <div >
+                    <Container>
                         <Row>
                             <Col>
-                                <h2 className="display-3 ">Hello {this.state.username}</h2>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col>
-                                <h3 className="display-6">Users</h3>
+                                <h3 className="display-3">Users</h3>
                             </Col>
                         </Row>
                         <br/>
@@ -186,12 +102,18 @@ class MainPanel2 extends React.Component {
                                                 ))}
                                         </tbody>
                                     </table>
-                                </Col>
+                            </Col>
                         </Row>
                         <Row >
                             <Col md={2} >
-                                <button className="btn btn-primary" onClick={this.fetchPrevious}>Previous</button>
-                                <button className="btn btn-primary" onClick={this.fetchNext}>Next</button>
+                                <IconContext.Provider value={{color: "#fff"}}>
+                                    <button className="btn btn-primary text-center">
+                                        <GrFormPreviousLink onClick={() => this.fetchUsers(this.state.previous_page)}>Previous</GrFormPreviousLink>
+                                    </button>
+                                    <button className="btn btn-primary text-white" >
+                                        <GrFormNextLink onClick={() => this.fetchUsers(this.state.next_page)} style={{'color': 'white'}}/>
+                                    </button>
+                                </IconContext.Provider>
                             </Col>
                             <Col md={2}>
                                 {this.state.role === "1" ? <button className="btn btn-success">
@@ -220,25 +142,11 @@ class MainPanel2 extends React.Component {
                                 </button>
                             </Col>
                         </Row>
-                        <br/>
-                        <Row>
-                            <Col>
-                                <h3>Companies</h3>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col md={9}>
-                                <CompaniesPanel role_id={this.state.role} token={this.token} filter_by={this.state.filter_by}/>
-                            </Col>
-                        </Row>
                     </Container>
+        </div>
+        )
+    }
 
-                </div>
-                {/*<Outlet/>*/}
-            </div>
-        );
-        }
 }
 
-export default withCookies(MainPanel2)
-
+export default UsersList

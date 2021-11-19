@@ -59,6 +59,12 @@ function CompanyDetail(props) {
                         </Row>
                         <br/>
                         <Row>
+                            <Col>
+                                <button className="btn btn-primary">
+                                <Link className="text-white" to={"/home"}>Back</Link>
+                            </button>
+                            </Col>
+
                             {role === "1" || "2" ?
                                 <Col>
                                 <button className="btn btn-primary">

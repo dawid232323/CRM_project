@@ -56,6 +56,7 @@ class CompanySerializer(serializers.ModelSerializer):
         instance.company_business = validated_data.get('company_business', instance.company_business)
         instance.company_address = validated_data.get('company_address', instance.company_address)
         instance.company_city = validated_data.get('company_city', instance.company_city)
+        instance.save()
         return instance
 
 
@@ -76,6 +77,7 @@ class TradeNoteSerializer(serializers.ModelSerializer):
     def update(self, instance: TradeNote, validated_data):
         instance.note_contents = validated_data.get('note_contents', instance.note_contents)
         instance.note_company_id = validated_data.get('note_company_id', instance.note_company_id)
+        instance.save()
         return instance
 
 
@@ -99,4 +101,5 @@ class ContactPersonSerializer(serializers.ModelSerializer):
         instance.contact_mail = validated_data.get('contact_mail', instance.contact_mail)
         instance.contact_position = validated_data.get('contact_position', instance.contact_position)
         instance.contact_company = validated_data.get('contact_company', instance.contact_company)
+        instance.save()
         return instance

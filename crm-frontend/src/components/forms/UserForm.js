@@ -51,7 +51,7 @@ export default function UserForm(props) {
     }, [user_data])
 
     const navigateBack = () => {
-        navigator('/home')
+        navigator('/home/ussers')
     }
 
     const submitData = () => {
