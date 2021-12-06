@@ -1,10 +1,10 @@
 import React from "react";
-import * as FaIcons from "react-icons/fa";
 import * as AiIcons from "react-icons/ai";
-import * as IoIcons from "react-icons/io"
+import {IoPeopleOutline} from "react-icons/io5"
 import * as ImIcons from "react-icons/im"
 import * as BsIcons from "react-icons/bs"
-import MainPanel2 from "../../components/MainPanel2";
+import {BiLogOut} from "react-icons/bi"
+import {MdOutlineNotes} from "react-icons/md"
 
 
 
@@ -29,20 +29,20 @@ export const SideBarData = [
     },
     {
         title: 'Contact Persons',
-        path: '/contact_persons',
-        icon: <AiIcons.AiFillHome/>,
+        path: 'contacts',
+        icon: <IoPeopleOutline/>,
         cName: 'nav-text'
     },
     {
-        title: 'Home',
-        path: '/',
-        icon: <AiIcons.AiFillHome/>,
+        title: "Trade Notes",
+        path: 'trade_notes',
+        icon: <MdOutlineNotes/>,
         cName: 'nav-text'
     },
     {
-        title: 'Home',
-        path: '/',
-        icon: <AiIcons.AiFillHome/>,
+        title: "Logout",
+        path: '/logout',
+        icon: <BiLogOut/>,
         cName: 'nav-text'
-    },
+    }
 ]

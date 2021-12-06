@@ -1,6 +1,6 @@
 import React from "react";
-import ApiService from "../ApiService";
-import {Link} from "react-router-dom";
+import ApiService from "../Api_services/ApiService";
+import {Link, Navigate} from "react-router-dom";
 import {Col, Container, Row} from "react-grid-system";
 import cookie from "react-cookies";
 
@@ -11,6 +11,7 @@ class CompaniesPanel extends React.Component {
         this.state.role_id = cookie.load("user_role")
         this.state.token = "3830179166ab484e973a682262156bb16b6490e5"
         this.main_link = "http://localhost:8000/cmr/companies/"
+        this.is_logged = cookie.load("is_logged")
         this.PaginateCompanies = this.PaginateCompanies.bind(this)
         this.filterCompanies = this.filterCompanies.bind(this)
     }
@@ -26,6 +27,10 @@ class CompaniesPanel extends React.Component {
     }
 
     componentDidMount() {
+        this.is_logged = cookie.load("is_logged")
+        if (!this.is_logged) {
+            return <Navigate to='/login'/>
+        }
         this.setState({token: "3830179166ab484e973a682262156bb16b6490e5", role_id: this.props.role_id})
         ApiService.getCompaniesList(this.state.token, "http://localhost:8000/cmr/companies/").then(response => this.setState({companies: response.results,
             next_page: response.next, previous_page: response.previous})).catch(error => alert(error))
@@ -95,7 +100,7 @@ class CompaniesPanel extends React.Component {
                         <Col>
                             <select className="form-select" value={this.state.filter_condition}
                                     onChange={event => this.setState({filter_condition: event.target.value})}>
-                                <option selected>Choose Filter Condition</option>
+                                <option defaultValue="Choose Filter Condition">Choose Filter Condition</option>
                                 <option value="businessName">Business Name</option>
                                 <option value="companyID">company ID</option>
                                 <option value="date">Date</option>

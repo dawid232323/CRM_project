@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import ApiService from "../../ApiService";
+import ApiService from "../../Api_services/ApiService";
 import {Col, Container, Row} from "react-grid-system";
 import {useCookies} from "react-cookie";
 
@@ -51,7 +51,7 @@ export default function UserForm(props) {
     }, [user_data])
 
     const navigateBack = () => {
-        navigator('/home/ussers')
+        navigator('/logged/users')
     }
 
     const submitData = () => {

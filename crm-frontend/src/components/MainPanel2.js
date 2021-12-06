@@ -2,7 +2,7 @@ import React from "react";
 import CompaniesPanel from "../pages/companiesPanel";
 import {Container, Row, Col} from "react-grid-system";
 import {Link} from "react-router-dom";
-import ApiService from "../ApiService";
+import ApiService from "../Api_services/ApiService";
 import {Cookies, withCookies} from "react-cookie"
 import {instanceOf} from "prop-types"
 

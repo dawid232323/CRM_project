@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Link, Outlet, useParams} from "react-router-dom";
-import ApiService from "../ApiService";
+import ApiService from "../Api_services/ApiService";
 import {Col, Container, Row} from "react-grid-system";
 import {useCookies} from "react-cookie";
 import cookie from "react-cookies"
@@ -61,7 +61,7 @@ function CompanyDetail(props) {
                         <Row>
                             <Col>
                                 <button className="btn btn-primary">
-                                <Link className="text-white" to={"/home"}>Back</Link>
+                                <Link className="text-white" to={"/logged/companies"}>Back</Link>
                             </button>
                             </Col>
 

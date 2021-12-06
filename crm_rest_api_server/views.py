@@ -224,6 +224,14 @@ class BusinessViewSet(viewsets.ModelViewSet):
         serializer = self.serializer_class(self.queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CompaniesViewSet(viewsets.ModelViewSet):
     queryset = Company.objects.all()
@@ -368,6 +376,7 @@ class ContactPersonViewSet(viewsets.ModelViewSet):
 
     @user_id_auth({1, 2})
     def create(self, request, *args, **kwargs):
+        print(request.data)
         request.data['contact_added_by'] = kwargs['user_id']
         serialised_data = self.serializer_class(data=request.data)
         if serialised_data.is_valid():
@@ -406,6 +415,7 @@ class ContactPersonViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None, *args, **kwargs):
         contact_to_delete = get_object_or_404(ContactPerson, pk=pk)
         contact_to_delete.contact_is_deleted = True
+        contact_to_delete.save()
         return Response(status=status.HTTP_200_OK)
 
 
@@ -442,6 +452,13 @@ class FilterViewSet(viewsets.ModelViewSet):
         print(serializer.data)
         return self.get_paginated_response(serializer.data)
 
+    def __filter_contacts(self, filter_condition, filter_by):
+        wanted_contacts = None
+        if filter_condition == 'surname':
+            wanted_contacts = self.paginate_queryset(ContactPerson.objects.filter(contact_surname__contains=filter_by))
+        serializer = ContactPersonSerializer(wanted_contacts, many=True)
+        return self.get_paginated_response(serializer.data)
+
     @role_auth_maker({1, 2, 3})
     def list(self, request, filter_object=None, filter_by=None, filter_condition=None, *args, **kwargs):
         print(f'{filter_object} {filter_by} {filter_condition}')
@@ -450,3 +467,12 @@ class FilterViewSet(viewsets.ModelViewSet):
         elif filter_object == 'companies':
             print('entering first if')
             return self.__filter_companies(filter_by, filter_condition)
+        elif filter_object == 'contacts':
+            return self.__filter_contacts(filter_by, filter_condition)
+
+
+def short_companies(request):
+    companies = list(Company.objects.values('id', 'company_name'))
+    # serializer = CompanySerializer(companies, many=True)
+    print(companies)
+    return JsonResponse(companies, safe=False)

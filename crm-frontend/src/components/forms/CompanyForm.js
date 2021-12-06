@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Col, Container, Row} from "react-grid-system";
-import ApiService from "../../ApiService";
+import ApiService from "../../Api_services/ApiService";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import {confirmAlert} from "react-confirm-alert";
 import 'react-confirm-alert/src/react-confirm-alert.css';
@@ -26,7 +26,7 @@ export default function CompanyForm(props) {
             buttons: [
                 {
                     label: 'YES',
-                    onClick: () => navigator(`/company/${details.id}`)
+                    onClick: () => navigator(`/logged/companies`)
                 },
                 {
                     label: 'NO',
@@ -50,9 +50,10 @@ export default function CompanyForm(props) {
                         }
                     ]
                 })
+                navigator(`/company/${response.id}`)
             })
             .catch(error => alert(error))
-        navigator(`/home`)
+
     }
 
     const createCompany = () => {

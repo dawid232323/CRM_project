@@ -1,16 +1,18 @@
 import React from "react";
 import cookie from "react-cookies"
-import ApiService from "../ApiService";
+import ApiService from "../Api_services/ApiService";
 import {Col, Container, Row} from "react-grid-system";
 import {Link} from "react-router-dom";
 import {GrFormNextLink, GrFormPreviousLink} from "react-icons/gr"
 import {IconContext} from "react-icons";
+import { Navigate } from "react-router-dom";
 
 class UsersList extends React.Component{
 
     constructor(props) {
         super(props);
         this.token = "3830179166ab484e973a682262156bb16b6490e5"
+        this.is_logged = cookie.load("is_logged")
         this.filter_users = this.filter_users.bind(this)
         this.setBasicData = this.setBasicData.bind(this)
         this.fetchUsers = this.fetchUsers.bind(this)
@@ -32,6 +34,10 @@ class UsersList extends React.Component{
     }
 
     componentDidMount() {
+        this.is_logged = cookie.load("is_logged")
+        if (!this.is_logged) {
+            return <Navigate to='/login'/>
+        }
         this.setState({role: cookie.load('user_role')})
         ApiService.ListUsers("3830179166ab484e973a682262156bb16b6490e5")
             .then((response) => this.setBasicData(response))
@@ -69,7 +75,7 @@ class UsersList extends React.Component{
                                                 <th scope="col">Last Name</th>
                                                 <th scope="col">Date of Birth</th>
                                                 <th scope="col">Role ID</th>
-                                                {this.state.role === "1" ?
+                                                {this.state.role === "1" || "2" ?
                                                 <th scope="col">Additional Options</th>: null}
                                             </tr>
                                         </thead>
@@ -82,7 +88,7 @@ class UsersList extends React.Component{
                                                     <td>{user.last_name}</td>
                                                     <td>{user.date_of_birth}</td>
                                                     <td>{user.role_id}</td>
-                                                    {this.state.role === "1" ?
+                                                    {this.state.role === "1" || "2" ?
                                                         <td>
                                                             <Container>
                                                                 <Row>
@@ -91,9 +97,11 @@ class UsersList extends React.Component{
                                                                             <Link className="text-white" to={`/edit_user/${user.id}`}>Edit User</Link>
                                                                         </button>
                                                                     </Col>
-                                                                    <Col md={4}>
+                                                                    {this.state.role == "1" ?
+                                                                        <Col md={4}>
                                                                         <button className="btn btn-danger">Delete User</button>
-                                                                    </Col>
+                                                                    </Col> : null
+                                                                    }
                                                                 </Row>
                                                             </Container>
                                                         </td> :null}

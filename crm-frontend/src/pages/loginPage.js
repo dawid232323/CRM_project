@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from "react";
 import "../App.css"
-import ApiService from "../ApiService";
+import ApiService from "../Api_services/ApiService";
 import {useNavigate} from "react-router-dom";
+import cookie from "react-cookies";
 
 
 export default function Login() {
@@ -14,7 +15,7 @@ export default function Login() {
     useEffect( () => {
         if (token) {
             console.log(token)
-            navigate('/home')
+            navigate('/logged/home')
             fetch("http://localhost:8000/cmr/users/", {
                 'method': 'GET',
                 headers: {
@@ -31,9 +32,11 @@ export default function Login() {
 
     const obtain_auth_token = () => {
         ApiService.obtainToken(username, password)
-            .then(resp => setToken(resp.token))
-            .catch(error => console.log())
-        console.log(token)
+            .then(resp => cookie.save("auth_token", resp.token, {path:"/"}))
+            .catch(error => alert(error))
+
+        cookie.save("is_logged", true, {path:"/"})
+        navigate('/logged/home')
     }
 
     return(
