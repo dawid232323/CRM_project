@@ -3,6 +3,7 @@ import "../App.css"
 import ApiService from "../Api_services/ApiService";
 import {useNavigate} from "react-router-dom";
 import cookie from "react-cookies";
+import {confirmAlert} from "react-confirm-alert";
 
 
 export default function Login() {
@@ -26,17 +27,36 @@ export default function Login() {
                 .then(resp => resp.json())
                 .then(resp=> console.log(resp.value))
                 .catch(error => console.error())
-            console.log(token)
         }
     }, [token])
 
+    const badCredentials = () => {
+        confirmAlert({
+            title: "Bad Login Credentials",
+            message: "Invalid login or password",
+            buttons: [
+                {
+                    label: "OK",
+                    onClick: null
+                }
+            ]
+        })
+    }
+
     const obtain_auth_token = () => {
         ApiService.obtainToken(username, password)
-            .then(resp => cookie.save("auth_token", resp.token, {path:"/"}))
-            .catch(error => alert(error))
+            .then(resp => {
+                if ('token' in resp){
+                    cookie.save("auth_token", resp.token, {path:"/"})
+                    cookie.save("is_logged", true, {path:"/"})
+                    navigate('/logged/home')
+                }
+                else {
+                    badCredentials()
+                }
 
-        cookie.save("is_logged", true, {path:"/"})
-        navigate('/logged/home')
+            })
+            .catch(error => alert(error))
     }
 
     return(

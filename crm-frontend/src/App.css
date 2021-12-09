@@ -100,3 +100,19 @@
   position: relative;
   z-index: 1;
 }
+
+.alertBackground{
+  background-color: black;
+  border-style: solid;
+  border-radius: 20px;
+  text-align: center;
+  padding: 3%;
+  margin-top: 20%;
+  margin-left: 20%;
+  margin-right: 20%;
+}
+
+.alertLabel{
+  background-color: black;
+  font-size: 30px;
+}
