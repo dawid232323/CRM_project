@@ -10,7 +10,7 @@ class CompaniesPanel extends React.Component {
         super(props);
         this.state.role_id = cookie.load("user_role")
         this.state.token = "3830179166ab484e973a682262156bb16b6490e5"
-        this.main_link = "http://localhost:8000/cmr/companies/"
+        this.main_link = "http://localhost:8000/cmr/companies/?deleted=False"
         this.is_logged = cookie.load("is_logged")
         this.PaginateCompanies = this.PaginateCompanies.bind(this)
         this.filterCompanies = this.filterCompanies.bind(this)
@@ -32,7 +32,7 @@ class CompaniesPanel extends React.Component {
             return <Navigate to='/login'/>
         }
         this.setState({token: "3830179166ab484e973a682262156bb16b6490e5", role_id: this.props.role_id})
-        ApiService.getCompaniesList(this.state.token, "http://localhost:8000/cmr/companies/").then(response => this.setState({companies: response.results,
+        ApiService.getCompaniesList(this.state.token, "http://localhost:8000/cmr/companies/?deleted=False").then(response => this.setState({companies: response.results,
             next_page: response.next, previous_page: response.previous})).catch(error => alert(error))
     }
 

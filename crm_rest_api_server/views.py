@@ -14,10 +14,6 @@ from crm_rest_api_server.serializers import RoleSerializer, UserSerializer, Busi
     TradeNoteSerializer, ContactPersonSerializer
 
 
-def index(request):
-    return HttpResponse('Hello world')
-
-
 class shortUserDetails(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = CmrUser.objects.all()
@@ -268,15 +264,15 @@ class CompaniesViewSet(viewsets.ModelViewSet):
 
     @filtering_auth()
     def list(self, request, *args, **kwargs):
-        if kwargs['filter_by'] and kwargs['filter_condition']:
-            fil_by = kwargs['filter_by']
-            condition = kwargs['filter_condition']
-            try:
-                wanted_companies = self.__companies_getter(fil_by, condition)
-            except ObjectDoesNotExist:
-                return JsonResponse({"detail": "No such object"}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            wanted_companies = self.paginate_queryset(queryset=self.queryset)
+        wanted_companies = None
+        if request.query_params.__contains__("deleted"):
+            param = request.query_params.__getitem__("deleted")
+            if param == 'True':
+                print('true')
+                wanted_companies = self.paginate_queryset(queryset=self.queryset)
+            else:
+                print('false')
+                wanted_companies = self.paginate_queryset(queryset=self.queryset.filter(company_is_deleted=False))
         serializer = self.serializer_class(wanted_companies, many=True)
         return self.get_paginated_response(serializer.data)
 
@@ -288,6 +284,7 @@ class CompaniesViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None, *args, **kwargs):
         comp_to_delete = self.queryset.get(pk=pk)
         comp_to_delete.company_is_deleted = True
+        comp_to_delete.save()
         return Response(self.serializer_class(comp_to_delete).data, status=status.HTTP_200_OK)
 
     # @edit_auth
@@ -475,3 +472,4 @@ def short_companies(request):
     # serializer = CompanySerializer(companies, many=True)
     print(companies)
     return JsonResponse(companies, safe=False)
+

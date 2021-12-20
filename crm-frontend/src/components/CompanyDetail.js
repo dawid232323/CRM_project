@@ -2,22 +2,56 @@ import React, {useEffect, useState} from "react";
 import {Link, Outlet, useParams} from "react-router-dom";
 import ApiService from "../Api_services/ApiService";
 import {Col, Container, Row} from "react-grid-system";
-import {useCookies} from "react-cookie";
 import cookie from "react-cookies"
+import {useNavigate} from "react-router";
+import CompanyService from "../Api_services/CompanyService";
+import {confirmAlert} from "react-confirm-alert";
 
 function CompanyDetail(props) {
     const params = useParams()
     const [details, setDetails] = useState([])
     const [role, setRole] = useState("0")
-
-    useEffect(() => {
-        ApiService.GetCompanyDetails(props.token, params.companyID).then(response => setDetails(response))
-            .catch(error => alert(error))
-    }, [])
+    const [token, setToken] = useState(cookie.load('auth_token'))
+    const [isLogged, setLogged] = useState(cookie.load('is_logged'))
+    const navigator = useNavigate()
 
     useEffect(() => {
         setRole(cookie.load("user_role"))
-    })
+        setLogged(cookie.load('is_logged'))
+        setToken(cookie.load('auth_token'))
+        if (isLogged) {
+            ApiService.GetCompanyDetails(token, params.companyID)
+                .then(response => setDetails(response))
+                .catch(error => alert(error))
+        }
+        else {
+            navigator('/login')
+        }
+    }, [])
+
+    const deleteCompany = (id) => {
+        confirmAlert({
+            title: "Are you sure?",
+            message: "Are you sure you want to delete this company?",
+            buttons: [
+                {
+                    label: "Yes",
+                    onClick: () => {
+                        CompanyService.deleteCompany(token, id)
+                            .then(response => console.log(response))
+                            .catch(error => alert(error))
+                        navigator('/logged/companies/')
+                    }
+                },
+                {
+                    label: "No",
+                    onClick: null
+                }
+            ]
+        })
+
+
+    }
 
     return (
             <div className="detailsBackground">
@@ -74,7 +108,8 @@ function CompanyDetail(props) {
                             }
                             {role === "1" ?
                             <Col>
-                                <button className="btn btn-danger">Delete Company</button>
+                                <button className="btn btn-danger"
+                                        onClick={() => deleteCompany(params.companyID)}>Delete Company</button>
                             </Col> : null
                             }
                         </Row>
