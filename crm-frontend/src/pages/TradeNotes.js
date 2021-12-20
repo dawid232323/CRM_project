@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {Col, Container, Row} from "react-grid-system";
 import cookie from "react-cookies";
-import {useNavigate} from "react-router";
+import {Outlet, useNavigate} from "react-router";
 import TradeNotesService from "../Api_services/TradeNotesService";
+import {FiArrowRightCircle, FiArrowLeftCircle} from "react-icons/fi"
 import {Link} from "react-router-dom";
 
 
@@ -50,6 +51,12 @@ export default function TradeNotesPanel() {
         }
     }
 
+    const deleteTradeNote = (noteID) => {
+        TradeNotesService.deleteTradeNote(token, noteID)
+            .then(response => console.log(response))
+            .catch(error => alert(error))
+    }
+
     return (
         <div>
             <Container>
@@ -77,11 +84,15 @@ export default function TradeNotesPanel() {
                                     <tr key={note.id}>
                                         <th scope="row">{note.id}</th>
                                         <td>{note.note_company_id}</td>
-                                        <td>{note.note_contents}</td>
+                                        <td>
+                                            <Link to={`contents/${note.id}`} className="text-decoration-none">
+                                                Display
+                                            </Link>
+                                        </td>
                                         <td>{note.note_added_by}</td>
                                         <td>
                                            {role_id === "1" ?
-                                            <button className="btn btn-danger text-decoration-none">
+                                            <button className="btn btn-danger text-decoration-none" onClick={() => deleteTradeNote(note.id)}>
                                                 Delete
                                             </button> : null
                                         }
@@ -93,10 +104,41 @@ export default function TradeNotesPanel() {
                                         </button>: null }
                                         </td>
                                     </tr>
-                                )
-                                )}
+                                ))}
                             </tbody>
                         </table>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col md={1}>
+                        <button className='btn btn-primary' onClick={() => fetchOtherPage(previousPage)}>
+                            <FiArrowLeftCircle/>
+                        </button>
+                        <button className="btn btn-primary" onClick={() => fetchOtherPage(nextPage)}>
+                            <FiArrowRightCircle/>
+                        </button>
+                    </Col>
+                    <Col>
+                        <button className="btn btn-primary checkbox checkbox-inline" onClick={
+                            () => setDeleted(!showDeleted)
+                        }>
+                            Show Deleted
+                        </button>
+                    </Col>
+                </Row>
+                <br/>
+                <Row>
+                    <Col>
+                        <button className="btn btn-primary">
+                            <Link to='/logged/trade_notes/new' className="text-decoration-none text-white">
+                                Create new Trade Note
+                            </Link>
+                        </button>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <Outlet/>
                     </Col>
                 </Row>
             </Container>

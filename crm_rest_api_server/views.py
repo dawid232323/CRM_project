@@ -1,14 +1,12 @@
 from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.views import APIView
 
 from crm_rest_api_server.decorators import role_auth_maker, edit_auth, user_id_auth, filtering_auth, function_authorizer
 from crm_rest_api_server.models import Roles, CmrUser, Business, Company, TradeNote, ContactPerson
@@ -364,6 +362,7 @@ class TradeNoteViewSet(viewsets.ModelViewSet):
     def destroy(self, request, pk=None, *args, **kwargs):
         note_to_delete = get_object_or_404(TradeNote, pk=pk)
         note_to_delete.note_is_deleted = True
+        note_to_delete.save()
         return Response(status=status.HTTP_200_OK)
 
 

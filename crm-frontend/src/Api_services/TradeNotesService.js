@@ -18,7 +18,7 @@ export default class TradeNotesService {
     }
 
     static editTradeNotes(auth_token, note_id, body) {
-        return fetch(`http://127.0.0.1:8000/cmr/notes/${note_id}`, {
+        return fetch(`http://127.0.0.1:8000/cmr/notes/${note_id}/`, {
             method: 'PUT',
             headers: main_headers(auth_token),
             body: JSON.stringify(body)
@@ -36,7 +36,7 @@ export default class TradeNotesService {
     }
 
     static deleteTradeNote(auth_token, note_id) {
-        return fetch(`http://127.0.0.1:8000/cmr/notes/${note_id}`, {
+        return fetch(`http://127.0.0.1:8000/cmr/notes/${note_id}/`, {
             method: 'DELETE',
             headers: main_headers(auth_token)
         })
@@ -44,7 +44,7 @@ export default class TradeNotesService {
     }
 
     static getNoteDetails(auth_token, note_id) {
-        return fetch(`http://127.0.0.1:8000/cmr/notes/${note_id}`, {
+        return fetch(`http://127.0.0.1:8000/cmr/notes/${note_id}/`, {
             method: 'GET',
             headers: main_headers(auth_token)
         })

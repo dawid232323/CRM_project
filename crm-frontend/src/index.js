@@ -21,6 +21,7 @@ import ContactForm from "./components/forms/ContactForm";
 import LogoutPage from "./components/logoutPage";
 import TradeNotesPanel from "./pages/TradeNotes";
 import TradeNoteForm from "./components/forms/TradeNoteForm";
+import TradeNoteContent from "./pages/TradeNoteContent";
 
 ReactDOM.render(
     <CookiesProvider>
@@ -35,7 +36,9 @@ ReactDOM.render(
                         <Route path="users" element={<UsersList/>}/>
                         <Route path="home" element={<HomePage/>}/>
                         <Route path="contacts" element={<ContactPersonPanel/>}/>
-                        <Route path="trade_notes" element={<TradeNotesPanel/>}/>
+                    <Route path="trade_notes" element={<TradeNotesPanel/>}>
+                        <Route path="contents/:noteID" element={<TradeNoteContent/>}/>
+                    </Route>
                         <Route path="logout" element={<LogoutPage/>}/>
                     <Route path="contacts/edit/:contactID" element={<ContactForm new={false}/>}/>
                     <Route path="contacts/new" element={<ContactForm new={true}/>}/>

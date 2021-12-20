@@ -26,7 +26,7 @@ export default function Login() {
             })
                 .then(resp => resp.json())
                 .then(resp=> console.log(resp.value))
-                .catch(error => console.error())
+                .catch(error => console.error(error))
         }
     }, [token])
 

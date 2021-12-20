@@ -75,7 +75,6 @@ export default function ContactForm(props) {
             .catch(error => alert(error))
         }
         else {
-            console.log("printing ", body)
             ApiService.CreateContactPerson(token, body)
             .then(response => SuccessAlert(response.id))
             .catch(error => alert(error))
@@ -83,7 +82,20 @@ export default function ContactForm(props) {
     }
 
     const abort = () => {
-
+        confirmAlert({
+            title: "Are you sure?",
+            message: "Are you sure you want to go back? New data will be lost",
+            buttons: [
+                {
+                    label: "Yes",
+                    onClick: () => navigator(-1)
+                },
+                {
+                    label: "No",
+                    onClick: null
+                }
+            ]
+        })
     }
 
     return (
