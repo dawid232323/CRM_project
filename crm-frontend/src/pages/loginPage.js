@@ -44,11 +44,13 @@ export default function Login() {
     }
 
     const obtain_auth_token = () => {
+        let date = new Date()
+        date.setMinutes(10)
         ApiService.obtainToken(username, password)
             .then(resp => {
                 if ('token' in resp){
-                    cookie.save("auth_token", resp.token, {path:"/"})
-                    cookie.save("is_logged", true, {path:"/"})
+                    cookie.save("auth_token", resp.token, {path:"/", expires: date})
+                    cookie.save("is_logged", true, {path:"/", expires: date})
                     navigate('/logged/home')
                 }
                 else {
