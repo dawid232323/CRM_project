@@ -11,11 +11,12 @@ class UsersList extends React.Component{
 
     constructor(props) {
         super(props);
-        this.token = "3830179166ab484e973a682262156bb16b6490e5"
+        this.token = cookie.load("auth_token")
         this.is_logged = cookie.load("is_logged")
         this.filter_users = this.filter_users.bind(this)
         this.setBasicData = this.setBasicData.bind(this)
         this.fetchUsers = this.fetchUsers.bind(this)
+        this.showDeleted = this.showDeleted.bind(this)
     }
 
     state = {
@@ -25,7 +26,9 @@ class UsersList extends React.Component{
         filter_by: '',
         filter_condition: '',
         next_page: '',
-        previous_page: ''
+        previous_page: '',
+        token: '',
+        show_deleted: true,
     }
 
     setBasicData(response) {
@@ -38,8 +41,9 @@ class UsersList extends React.Component{
         if (!this.is_logged) {
             return <Navigate to='/login'/>
         }
-        this.setState({role: cookie.load('user_role')})
-        ApiService.ListUsers("3830179166ab484e973a682262156bb16b6490e5")
+        this.setState({role: cookie.load('user_role'),
+            token: cookie.load("auth_token")})
+        ApiService.ListUsers(this.token)
             .then((response) => this.setBasicData(response))
     }
 
@@ -52,6 +56,13 @@ class UsersList extends React.Component{
     fetchUsers(link) {
         ApiService.ListUsers(this.token, link)
             .then((response) => this.setBasicData(response))
+    }
+
+    showDeleted() {
+        console.log('showing delete')
+        this.setState({show_deleted: !this.state.show_deleted})
+        let param = String(this.state.show_deleted).charAt(0).toUpperCase() + String(this.state.show_deleted).slice(1)
+        this.fetchUsers(`http://127.0.0.1:8000/cmr/users/?deleted=${param}`)
     }
 
     render() {
@@ -123,6 +134,13 @@ class UsersList extends React.Component{
                                     </button>
                                 </IconContext.Provider>
                             </Col>
+                            {this.state.role !== "3" ?
+                                <Col md={2}>
+                                    <label>
+                                        Show Deleted
+                                    </label>
+                                    <input type="checkbox" onChange={this.showDeleted}/>
+                                </Col> : null}
                             <Col md={2}>
                                 {this.state.role === "1" ? <button className="btn btn-success">
                                     <Link className="text-white" to={"/new_user"} >Create New user</Link>

@@ -93,7 +93,7 @@ class UserPagination(PageNumberPagination):
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer  # setting class serializer, in this case it's user
-    queryset = CmrUser.objects.all().filter(is_deleted=False)  # setting queryset
+    queryset = CmrUser.objects  # setting queryset
     permission_classes = [IsAuthenticated]
     authentication_classes = (TokenAuthentication,)  # setting authentication,
     pagination_class = PageNumberPagination
@@ -112,12 +112,19 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # method that allows listing all users, all roles have access
-    # method does not include deleted users
-    # deleted users can be obtained with DeletedUsersViewSet
 
     @role_auth_maker({1, 2, 3})
     def list(self, request, *args, **kwargs):
-        response = super(UserViewSet, self).list(self, request)
+        wanted_users = None
+        if request.query_params.__contains__("deleted"):
+            argument = request.query_params.__getitem__("deleted")
+            if argument == 'True':
+                print(f'arguments are {request.query_params}')
+                wanted_users = self.paginate_queryset(queryset=self.queryset.all())
+            else:
+                wanted_users = self.paginate_queryset(queryset=self.queryset.filter(is_deleted=False))
+        serializer = self.serializer_class(wanted_users, many=True)
+        response = self.get_paginated_response(serializer.data)
         return response
 
     # method that allows to set user as deleted, only admin
@@ -389,13 +396,14 @@ class ContactPersonViewSet(viewsets.ModelViewSet):
             return JsonResponse({"detail": f"No elements with {fil_by} filter by {condition}"},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-    @filtering_auth()
+    @role_auth_maker({1, 2, 3})
     def list(self, request, *args, **kwargs):
-        if kwargs['filter_by'] and kwargs['filter_condition']:
-            return self.__response_generator(kwargs['filter_by'], kwargs['filter_condition'])
+        if request.query_params.__getitem__('deleted') == 'True':
+            wanted_contacts = self.paginate_queryset(queryset=self.queryset)
         else:
-            contacts = self.paginate_queryset(queryset=self.queryset)
-            return self.get_paginated_response(self.serializer_class(contacts, many=True).data)
+            wanted_contacts = self.paginate_queryset(queryset=self.queryset.filter(contact_is_deleted=False))
+        serializer = self.serializer_class(wanted_contacts, many=True)
+        return self.get_paginated_response(serializer.data)
 
     @role_auth_maker({1, 2})
     def update(self, request, pk=None, *args, **kwargs):

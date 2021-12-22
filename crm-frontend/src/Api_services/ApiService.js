@@ -50,7 +50,7 @@ export default class ApiService {
         }).then(response => response.json())
     }
 
-    static ListUsers(auth_token, link='http://127.0.0.1:8000/cmr/users/') {
+    static ListUsers(auth_token, link='http://127.0.0.1:8000/cmr/users/?deleted=False') {
         return fetch(link, {
             'method': 'GET',
             headers: {
@@ -130,7 +130,7 @@ export default class ApiService {
             .catch(error => console.log(error.detail))
     }
 
-    static ListContacts(auth_token, link="http://127.0.0.1:8000/cmr/contacts/") {
+    static ListContacts(auth_token, link="http://127.0.0.1:8000/cmr/contacts/?deleted=False") {
         return fetch(link, {
             method: 'GET',
             headers: main_headers(auth_token)
