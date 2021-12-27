@@ -4,6 +4,8 @@ import ApiService from "../../Api_services/ApiService";
 import {Link, useNavigate, useParams} from "react-router-dom";
 import {confirmAlert} from "react-confirm-alert";
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import cookie from "react-cookies";
+import {string} from "prop-types";
 
 
 export default function CompanyForm(props) {
@@ -36,13 +38,12 @@ export default function CompanyForm(props) {
         })
     }
 
-    const confirmData = () => {
-        const body = {company_name, company_nip, company_address, company_city, company_business, added_by}
-        ApiService.EditCompany("3830179166ab484e973a682262156bb16b6490e5", body, params.companyID)
-            .then(response => {
-                confirmAlert({
+    const check_response = (response) => {
+        if ('id' in response){
+            const type = params.is_new? 'created' : 'edited'
+                    confirmAlert({
                     title: 'Success!',
-                    message: 'Company edited successfully!',
+                    message: `Company ${type} successfully!`,
                     buttons: [
                         {
                             label: 'OK',
@@ -51,38 +52,47 @@ export default function CompanyForm(props) {
                     ]
                 })
                 navigator(`/company/${response.id}`)
-            })
+                } else {
+                    let bad_requests = []
+                    for (let item in response) {
+                        bad_requests.push(`${item}: ${response[item]} \n`)
+                    }
+                    confirmAlert({title: 'Bad Request',
+                        message: 'Check following data:\n' + bad_requests,
+                        buttons: [
+                            {
+                                label: 'OK',
+                                onClick: null
+                            }
+                        ]
+                    }
+                    )
+                }
+    }
+
+    const confirmData = () => {
+        const body = {company_name, company_nip, company_address, company_city, company_business, added_by}
+        ApiService.EditCompany(cookie.load('auth_token'), body, params.companyID)
+            .then(response => check_response(response)
+            )
             .catch(error => alert(error))
 
     }
 
     const createCompany = () => {
         const body = {company_name, company_nip, company_address, company_city, company_business}
-        ApiService.CreateCompany("3830179166ab484e973a682262156bb16b6490e5", body)
-            .then(response => {
-                console.log(response)
-                confirmAlert({
-                    title: 'Success!',
-                    message: 'Company created successfully!',
-                    buttons: [
-                        {
-                            label: 'OK',
-                            onClick: null
-                        }
-                    ]
-                })
-                navigator(`/company/${response.id}`)
-            })
+        ApiService.CreateCompany(cookie.load('auth_token'), body)
+            .then(response => check_response(response))
             .catch(error => alert(error))
     }
 
     useEffect(() => {
         if (!props.is_new){
-            ApiService.GetCompanyDetails("3830179166ab484e973a682262156bb16b6490e5", params.companyID)
+            ApiService.GetCompanyDetails(cookie.load('auth_token'), params.companyID)
                 .then(response => setDetails(response))
                 .catch(error => alert(error))
         }
-        ApiService.ListBuisinesses("3830179166ab484e973a682262156bb16b6490e5")
+        ApiService.ListBuisinesses(cookie.load('auth_token'))
             .then(response => {
                 setBusinesses(response)
             })

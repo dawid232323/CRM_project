@@ -3,17 +3,19 @@ import ApiService from "../Api_services/ApiService";
 import {Link, Navigate} from "react-router-dom";
 import {Col, Container, Row} from "react-grid-system";
 import cookie from "react-cookies";
+import {findAllByAltText} from "@testing-library/react";
 
 class CompaniesPanel extends React.Component {
 
     constructor(props) {
         super(props);
         this.state.role_id = cookie.load("user_role")
-        this.state.token = "3830179166ab484e973a682262156bb16b6490e5"
+        this.state.token = cookie.load('auth_token')
         this.main_link = "http://localhost:8000/cmr/companies/?deleted=False"
         this.is_logged = cookie.load("is_logged")
         this.PaginateCompanies = this.PaginateCompanies.bind(this)
         this.filterCompanies = this.filterCompanies.bind(this)
+        this.showDeleted = this.showDeleted.bind(this)
     }
 
     state = {
@@ -24,6 +26,7 @@ class CompaniesPanel extends React.Component {
         previous_page: '',
         filter_by: '',
         filter_condition: '',
+        show_deleted: true,
     }
 
     componentDidMount() {
@@ -31,7 +34,7 @@ class CompaniesPanel extends React.Component {
         if (!this.is_logged) {
             return <Navigate to='/login'/>
         }
-        this.setState({token: "3830179166ab484e973a682262156bb16b6490e5", role_id: this.props.role_id})
+        this.setState({token: cookie.load('auth_token'), role_id: this.props.role_id})
         ApiService.getCompaniesList(this.state.token, "http://localhost:8000/cmr/companies/?deleted=False").then(response => this.setState({companies: response.results,
             next_page: response.next, previous_page: response.previous})).catch(error => alert(error))
     }
@@ -52,6 +55,13 @@ class CompaniesPanel extends React.Component {
                 this.setState({companies: response.results, next_page: response.next,
                 previous_page: response.previous})
             }).catch(error => alert(error))
+    }
+
+    showDeleted() {
+        this.setState({show_deleted: !this.state.show_deleted})
+        const param = String(this.state.show_deleted).charAt(0).toUpperCase() + String(this.state.show_deleted).slice(1)
+        const link = `http://127.0.0.1:8000/cmr/companies/?deleted=${param}`
+        this.PaginateCompanies(link)
     }
 
     render() {
@@ -98,12 +108,15 @@ class CompaniesPanel extends React.Component {
                             onClick={() => this.PaginateCompanies(this.state.next_page)}>Next</button>
                         </Col>
                         <Col>
+                            <label>Show Deleted</label>
+                            <input type="checkbox" onChange={this.showDeleted}/>
+                        </Col>
+                        <Col>
                             <select className="form-select" value={this.state.filter_condition}
                                     onChange={event => this.setState({filter_condition: event.target.value})}>
                                 <option defaultValue="Choose Filter Condition">Choose Filter Condition</option>
                                 <option value="businessName">Business Name</option>
-                                <option value="companyID">company ID</option>
-                                <option value="date">Date</option>
+                                <option value="city">City</option>
                             </select>
                         </Col>
                         <Col>

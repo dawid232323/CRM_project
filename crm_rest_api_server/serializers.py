@@ -36,6 +36,10 @@ class BusinessSerializer(serializers.ModelSerializer):
         model = Business
         fields = ['id', 'business_name']
 
+    def create(self, validated_data):
+        new_business = Business.objects.create(**validated_data)
+        return new_business
+
 
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:

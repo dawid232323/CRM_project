@@ -233,6 +233,15 @@ class BusinessViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, pk=None, *args, **kwargs):
+        to_delete = self.queryset.get(pk=pk)
+        to_delete.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        retr = self.queryset.get(pk=pk)
+        return Response(self.serializer_class(retr).data, status=status.HTTP_200_OK)
+
 
 class CompaniesViewSet(viewsets.ModelViewSet):
     queryset = Company.objects.all()
@@ -275,10 +284,8 @@ class CompaniesViewSet(viewsets.ModelViewSet):
         if request.query_params.__contains__("deleted"):
             param = request.query_params.__getitem__("deleted")
             if param == 'True':
-                print('true')
                 wanted_companies = self.paginate_queryset(queryset=self.queryset)
             else:
-                print('false')
                 wanted_companies = self.paginate_queryset(queryset=self.queryset.filter(company_is_deleted=False))
         serializer = self.serializer_class(wanted_companies, many=True)
         return self.get_paginated_response(serializer.data)
@@ -444,16 +451,14 @@ class FilterViewSet(viewsets.ModelViewSet):
 
     def __filter_companies(self, filter_condition, filter_by):
         wanted_companies = None
-        print(f'filter condition is {filter_condition} filter by is {filter_by}')
         if filter_condition == 'businessName':
-            print('entered condition')
-            wanted_companies = self.paginate_queryset(Company.objects.all().filter(company_business__business_name__contains=filter_by))
-        elif filter_condition == 'businessID':
-            wanted_companies = self.paginate_queryset(Company.objects.all().filter(company_business__contains=filter_by))
-        elif filter_by == 'date':
-            pass
+            wanted_companies = self.paginate_queryset(Company.objects.all().filter(
+                company_business__business_name__contains=filter_by,
+                company_is_deleted=False))
+        elif filter_condition == 'city':
+            wanted_companies = self.paginate_queryset(Company.objects.filter(company_city__contains=filter_by,
+                                                                             company_is_deleted=False))
         serializer = CompanySerializer(wanted_companies, many=True)
-        print(serializer.data)
         return self.get_paginated_response(serializer.data)
 
     def __filter_contacts(self, filter_condition, filter_by):

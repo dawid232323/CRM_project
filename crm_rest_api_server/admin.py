@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from crm_rest_api_server.models import CmrUser, Company
+from crm_rest_api_server.models import CmrUser, Company, Business
 
 
 @admin.register(CmrUser)
@@ -13,3 +13,8 @@ class UserModel(admin.ModelAdmin):
 @admin.register(Company)
 class CompanyModel(admin.ModelAdmin):
     list_display = [field.name for field in Company._meta.fields if field.name != 'id']
+
+
+@admin.register(Business)
+class BusinessModel(admin.ModelAdmin):
+    list_display = [field.name for field in Business._meta.fields if field.name != 'id']
